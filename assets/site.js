@@ -1,18 +1,18 @@
-/* АвтоБатя. Прокрутка героя, появления, свет в боксе. Ванильный JS, без библиотек. */
+/* АвтоБатя. Покадровый герой на канвасе, появления, свет в боксе. Ванильный JS, без библиотек. */
 (function () {
   'use strict';
 
-  var VIDEO_URL = 'assets/hero-scrub.mp4';
-  var VIDEO_BYTES = 5980812;
+  var FRAME_COUNT = 192;                 // 8 секунд по 24 кадра
+  var FRAME_DIR = 'assets/frames/';
   var POSTER_URL = 'assets/hero-poster.jpg';
 
   var stage = document.getElementById('stage');
   var heroSec = document.getElementById('hero-sec');
-  var video = document.getElementById('hero');
+  var canvas = document.getElementById('hero');
+  var ctx = canvas ? canvas.getContext('2d', { alpha: false }) : null;
   var poster = document.getElementById('poster');
   var ring = document.getElementById('ring');
   var hint = document.getElementById('hint');
-  var lamps = document.getElementById('lamps');
   var dust = document.getElementById('dust');
   var nav = document.getElementById('nav');
 
@@ -32,7 +32,24 @@
      ---------------------------------------------------------- */
   var rand = rng(20250819);
 
-  function buildVisual(text, entrance, spread) {
+  function makeWordContent(word, accent) {
+    var frag = document.createDocumentFragment();
+    var at = accent ? word.indexOf(accent) : -1;
+    if (at < 0) {
+      frag.appendChild(document.createTextNode(word));
+      return frag;
+    }
+    if (at > 0) frag.appendChild(document.createTextNode(word.slice(0, at)));
+    var em = document.createElement('span');
+    em.className = 'hl';
+    em.textContent = accent;
+    frag.appendChild(em);
+    var tail = word.slice(at + accent.length);
+    if (tail) frag.appendChild(document.createTextNode(tail));
+    return frag;
+  }
+
+  function buildVisual(text, entrance, spread, accent) {
     var vis = document.createElement('span');
     vis.className = 'vis';
     vis.setAttribute('aria-hidden', 'true');
@@ -46,7 +63,8 @@
       w.className = 'w';
       if (!perChar) {
         w.style.setProperty('--th', ((i / Math.max(1, words.length)) * (entrance === 'depth' ? 0.34 : 0.42)).toFixed(3));
-        w.textContent = words[i] + (i < words.length - 1 ? ' ' : '');
+        w.appendChild(makeWordContent(words[i], accent));
+        if (i < words.length - 1) w.appendChild(document.createTextNode(' '));
       } else {
         var letters = words[i].split('');
         for (var j = 0; j < letters.length; j++) {
@@ -73,6 +91,7 @@
 
   function splitInto(el, entrance, spread) {
     var text = el.textContent.trim();
+    var accent = el.getAttribute('data-accent') || '';
     el.textContent = '';
     var sr = document.createElement('span');
     sr.className = 'sr-only';
@@ -80,9 +99,9 @@
     el.appendChild(sr);
 
     if (entrance === 'blur') {
-      var soft = buildVisual(text, entrance, spread);
+      var soft = buildVisual(text, entrance, spread, accent);
       soft.classList.add('vis--soft');
-      var sharp = buildVisual(text, entrance, spread);
+      var sharp = buildVisual(text, entrance, spread, accent);
       sharp.classList.add('vis--sharp');
       var holder = document.createElement('span');
       holder.className = 'vis';
@@ -91,7 +110,7 @@
       holder.appendChild(sharp);
       el.appendChild(holder);
     } else {
-      el.appendChild(buildVisual(text, entrance, spread));
+      el.appendChild(buildVisual(text, entrance, spread, accent));
     }
   }
 
@@ -149,30 +168,52 @@
   }
 
   /* ----------------------------------------------------------
-     3. Ворота на перемотку видео
+     3. Кадры: хранилище и отрисовка
      ---------------------------------------------------------- */
-  var seekBusy = false;
-  var pendingTime = null;
+  var frames = new Array(FRAME_COUNT);
+  var loadedCount = 0;
+  var drawnIndex = -1;
+  var canvasW = 0, canvasH = 0;
+  var heroReady = false;
 
-  function requestSeek(t) {
-    if (!video.duration) return;
-    if (seekBusy) { pendingTime = t; return; }
-    seekBusy = true;
-    video.currentTime = t;
+  function frameUrl(i) {
+    var s = '' + i;
+    while (s.length < 3) s = '0' + s;
+    return FRAME_DIR + 'f-' + s + '.webp';
   }
-  video.addEventListener('seeked', function () {
-    seekBusy = false;
-    if (pendingTime !== null) {
-      var t = pendingTime;
-      pendingTime = null;
-      requestSeek(t);
+
+  function sizeCanvas() {
+    if (!canvas) return;
+    var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    var w = Math.round(stage.clientWidth * dpr);
+    var h = Math.round(stage.clientHeight * dpr);
+    if (!w || !h || (w === canvasW && h === canvasH)) return;
+    canvasW = canvas.width = w;
+    canvasH = canvas.height = h;
+    drawnIndex = -1;
+  }
+
+  function nearestLoaded(want) {
+    if (frames[want]) return want;
+    for (var d = 1; d < FRAME_COUNT; d++) {
+      if (want - d >= 0 && frames[want - d]) return want - d;
+      if (want + d < FRAME_COUNT && frames[want + d]) return want + d;
     }
-  });
-  video.addEventListener('error', function () {
-    seekBusy = false;
-    pendingTime = null;
-    failVideo();
-  });
+    return -1;
+  }
+
+  function drawFrame(p) {
+    if (!ctx || !canvasW) return;
+    var want = Math.round(clamp(p, 0, 1) * (FRAME_COUNT - 1));
+    var idx = nearestLoaded(want);
+    if (idx < 0 || idx === drawnIndex) return;
+    drawnIndex = idx;
+    var img = frames[idx];
+    var iw = img.naturalWidth, ih = img.naturalHeight;
+    var s = Math.max(canvasW / iw, canvasH / ih);
+    var dw = iw * s, dh = ih * s;
+    ctx.drawImage(img, (canvasW - dw) / 2, (canvasH - dh) / 2, dw, dh);
+  }
 
   /* ----------------------------------------------------------
      4. Ход прокрутки героя
@@ -204,7 +245,7 @@
   function tick(now) {
     var dt = Math.min(100, now - (lastTick || now));
     lastTick = now;
-    var k = 0.16;
+    var k = 0.19;
     shown += (target - shown) * (1 - Math.pow(1 - k, dt / 16.667));
 
     if (loadK < 1 && loadStart) {
@@ -212,7 +253,7 @@
       loadK = loadK * loadK * (3 - 2 * loadK);
     }
 
-    var converged = Math.abs(target - shown) < 0.0005 && loadK >= 1;
+    var converged = Math.abs(target - shown) < 0.0004 && loadK >= 1;
     if (converged) {
       shown = target;
       rafId = null;
@@ -220,7 +261,7 @@
     } else {
       rafId = requestAnimationFrame(tick);
     }
-    if (video.duration) requestSeek(shown * video.duration);
+    drawFrame(shown);
     updateCaptions(shown);
     paintProgress(shown);
   }
@@ -245,7 +286,7 @@
   }
 
   /* ----------------------------------------------------------
-     5. Видео как Blob, с кольцом загрузки
+     5. Загрузка кадров: сначала редкая сетка, потом всё остальное
      ---------------------------------------------------------- */
   var heroInited = false;
   var fetchStarted = false;
@@ -269,59 +310,69 @@
     stage.classList.add('video-failed');
   }
 
-  function startBlobFetch() {
-    if (fetchStarted) return;
-    fetchStarted = true;
-    loadHeroBlob().catch(failVideo);
+  function frameOrder() {
+    var order = [], seen = {}, strides = [16, 8, 4, 2, 1], k, i;
+    for (k = 0; k < strides.length; k++) {
+      for (i = 0; i < FRAME_COUNT; i += strides[k]) {
+        if (!seen[i]) { seen[i] = 1; order.push(i); }
+      }
+    }
+    if (!seen[FRAME_COUNT - 1]) order.push(FRAME_COUNT - 1);
+    return order;
   }
 
-  function loadHeroBlob() {
-    var ctrl = new AbortController();
-    var watchdog = setTimeout(function () { ctrl.abort(); }, 20000);
-    return fetch(VIDEO_URL, { signal: ctrl.signal }).then(function (res) {
-      if (!res.ok || !res.body) throw new Error('no body');
-      var total = Number(res.headers.get('Content-Length')) || VIDEO_BYTES;
-      var reader = res.body.getReader();
-      var chunks = [];
-      var got = 0, lastRing = 0;
-      function pump() {
-        return reader.read().then(function (r) {
-          if (r.done) return;
-          clearTimeout(watchdog);
-          watchdog = setTimeout(function () { ctrl.abort(); }, 20000);
-          chunks.push(r.value);
-          got += r.value.length;
-          var frac = Math.min(1, got / total);
-          var now = performance.now();
-          if (now - lastRing > 100 || frac === 1) {
-            lastRing = now;
-            if (ring) ring.style.setProperty('--ld', Math.round(126 * (1 - frac)));
-          }
-          return pump();
-        });
-      }
-      return pump().then(function () {
-        clearTimeout(watchdog);
-        if (ring) ring.style.setProperty('--ld', 0);
-        video.src = URL.createObjectURL(new Blob(chunks, { type: 'video/mp4' }));
-        video.load();
-        video.addEventListener('canplay', function () {
-          requestSeek(heroProgress() * video.duration);
+  function startFrames() {
+    if (fetchStarted) return;
+    fetchStarted = true;
+
+    var order = frameOrder();
+    var firstPass = Math.ceil(FRAME_COUNT / 16);
+    var ptr = 0, active = 0, okCount = 0;
+
+    function done(idx, ok) {
+      loadedCount++;
+      active--;
+      if (ok) {
+        okCount++;
+        if (ring) ring.style.setProperty('--ld', Math.round(126 * (1 - okCount / FRAME_COUNT)));
+        if (!heroReady && okCount >= firstPass) {
+          heroReady = true;
+          sizeCanvas();
           stage.classList.add('video-ready');
-        }, { once: true });
-      });
-    });
+        }
+        if (heroReady) drawFrame(shown);
+      }
+      if (ptr >= order.length && active === 0 && okCount === 0) failVideo();
+      pump();
+    }
+
+    function pump() {
+      while (active < 6 && ptr < order.length) {
+        (function (idx) {
+          active++;
+          var img = new Image();
+          img.decoding = 'async';
+          img.onload = function () { frames[idx] = img; done(idx, true); };
+          img.onerror = function () { done(idx, false); };
+          img.src = frameUrl(idx);
+        })(order[ptr++]);
+      }
+    }
+
+    pump();
+    setTimeout(function () { if (!heroReady) failVideo(); }, 20000);
   }
 
   function initHeroOnce() {
     if (heroInited) return;
     heroInited = true;
+    sizeCanvas();
     poster.style.backgroundImage = "url('" + POSTER_URL + "')";
     var img = new Image();
-    img.onload = startBlobFetch;
-    img.onerror = startBlobFetch;
+    img.onload = startFrames;
+    img.onerror = startFrames;
     img.src = POSTER_URL;
-    setTimeout(startBlobFetch, 4000);
+    setTimeout(startFrames, 3000);
 
     loadStart = performance.now();
     buildDust();
@@ -364,6 +415,8 @@
     unpinFinalStates();
     target = heroProgress();
     shown = target;
+    sizeCanvas();
+    drawFrame(shown);
     updateCaptions(target);
     paintProgress(target);
     onHeroScroll();
@@ -446,7 +499,11 @@
   window.addEventListener('resize', function () {
     lastDraw = -1;
     onPageScroll();
-    if (scrubOn) onHeroScroll();
+    if (scrubOn) {
+      sizeCanvas();
+      drawFrame(shown);
+      onHeroScroll();
+    }
   }, { passive: true });
 
   /* ----------------------------------------------------------
@@ -542,13 +599,15 @@
     onPageScroll();
   }
 
-  reduceQuery.addEventListener ?
+  if (reduceQuery.addEventListener) {
     reduceQuery.addEventListener('change', function (e) {
       if (e.matches) pinToFinalStates(); else applyHeroMode();
-    }) :
+    });
+  } else {
     reduceQuery.addListener(function (e) {
       if (e.matches) pinToFinalStates(); else applyHeroMode();
     });
+  }
 
   /* ----------------------------------------------------------
      10. Пуск
