@@ -12,7 +12,7 @@
 <!-- DEPLOY STEP: подставить рабочий адрес сайта в og:url и og:image -->
 <meta property="og:url" content="https://example.com/">
 <meta property="og:image" content="https://example.com/assets/hero-ending.jpg">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='13' fill='%230D0F12'/><rect x='11' y='12' width='42' height='6' rx='3' fill='%23EAF2FF'/><path d='M18 52 32 22 46 52h-8.4l-5.6-12.6L26.4 52z' fill='%23EDEFF2'/><rect x='24' y='40' width='16' height='5' rx='2.5' fill='%23FF3B2B'/></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><path d='M32 3.5 56 17v30L32 60.5 8 47V17z' fill='%230D0F12' stroke='%2339414A' stroke-width='2'/><rect x='17' y='15' width='30' height='4.6' rx='2.3' fill='%23EAF2FF'/><path d='M20.5 47 32 24l11.5 23h-7l-4.5-9.6L27.5 47z' fill='%23EDEFF2'/><rect x='25.5' y='37.5' width='13' height='4.2' rx='2.1' fill='%23FF3B2B'/></svg>">
 <link rel="preload" href="assets/fonts/oswald-700.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/golos-text-400.woff2" as="font" type="font/woff2" crossorigin>
 <style>
@@ -301,29 +301,43 @@ button{font:inherit;color:inherit}
 
 .svc{position:relative;padding:clamp(34px,5vh,58px) 0;border-top:1px solid rgba(234,242,255,.08)}
 .svc:first-of-type{border-top:0}
-.svc__no{font-family:var(--mono);font-size:12px;letter-spacing:.22em;color:var(--accent);margin-bottom:14px;display:block}
-.stencil{position:relative;display:block;font-family:var(--display);font-weight:700;text-transform:uppercase;
-  font-size:clamp(30px,4.6vw,62px);line-height:1.04;letter-spacing:-.004em;color:#D9DEE5;
-  width:100%;overflow-wrap:break-word}
-.stencil__paint,.stencil__over{display:block;
-  -webkit-mask-image:repeating-linear-gradient(97deg,#000 0 .34em,transparent .34em .4em),url('assets/grain-a.png');
-  mask-image:repeating-linear-gradient(97deg,#000 0 .34em,transparent .34em .4em),url('assets/grain-a.png');
-  -webkit-mask-size:auto,3em 3em;mask-size:auto,3em 3em;
+.svc__no{font-family:var(--mono);font-size:12px;letter-spacing:.22em;color:var(--accent);margin-bottom:16px;display:block}
+
+/* бетонная плита, буквы врезаны внутрь и пробиты трафаретом */
+.plate{position:relative;overflow:hidden;border-radius:3px;
+  padding:clamp(20px,2.6vw,32px) clamp(22px,3vw,36px);
+  background:linear-gradient(163deg,#909AA3 0%,#7F8791 58%,#79818B 100%);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.30),inset 0 -2px 0 rgba(0,0,0,.34),0 22px 44px rgba(0,0,0,.5)}
+.plate__grain{position:absolute;inset:0;pointer-events:none;
+  background-image:url('assets/grain.png');background-size:190px 190px;opacity:.16;mix-blend-mode:multiply}
+.plate__bolts{position:absolute;inset:0;pointer-events:none;background-repeat:no-repeat;
+  background-image:
+    radial-gradient(circle 5px at 15px 15px,#A6AEB8 0 30%,#454C55 62%,#2B313A 92%,rgba(0,0,0,0) 100%),
+    radial-gradient(circle 5px at calc(100% - 15px) 15px,#A6AEB8 0 30%,#454C55 62%,#2B313A 92%,rgba(0,0,0,0) 100%),
+    radial-gradient(circle 5px at 15px calc(100% - 15px),#A6AEB8 0 30%,#454C55 62%,#2B313A 92%,rgba(0,0,0,0) 100%),
+    radial-gradient(circle 5px at calc(100% - 15px) calc(100% - 15px),#A6AEB8 0 30%,#454C55 62%,#2B313A 92%,rgba(0,0,0,0) 100%)}
+.plate__text{position:relative;margin:0;font-family:var(--display);font-weight:700;text-transform:uppercase;
+  font-size:clamp(30px,8.4vw,56px);font-size:clamp(30px,13cqw,56px);
+  line-height:1.08;letter-spacing:-.004em;color:#0F1318;
+  text-shadow:0 2px 0 rgba(255,255,255,.36),0 -1px 0 rgba(0,0,0,.85),0 3px 7px rgba(0,0,0,.35);
+  -webkit-mask-image:repeating-linear-gradient(96deg,#000 0 .52em,transparent .52em .585em),url('assets/grain-a.png');
+  mask-image:repeating-linear-gradient(96deg,#000 0 .52em,transparent .52em .585em),url('assets/grain-a.png');
+  -webkit-mask-size:auto,4em 4em;mask-size:auto,4em 4em;
   -webkit-mask-composite:source-in;mask-composite:intersect}
-.stencil__over{position:absolute;inset:0;filter:blur(8px);opacity:.26;color:#fff}
+
 .svc__text{margin-top:22px;font-size:17px;color:var(--text-secondary);max-width:52ch}
 .svc__row{display:flex;gap:clamp(22px,4vw,64px);align-items:center;flex-wrap:wrap}
-.svc__col{flex:1 1 320px;min-width:0}
+.svc__col{flex:1 1 320px;min-width:0;container-type:inline-size}
 .svc__tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
 .tag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-secondary);
   border:1px solid var(--line);border-radius:2px;padding:7px 11px}
 
-/* краска ложится при прокрутке */
-.svc .stencil{clip-path:inset(0 100% 0 0);opacity:0;
+/* плита открывается при прокрутке */
+.svc .plate{clip-path:inset(0 100% 0 0);opacity:0;
   transition:clip-path 1.05s var(--ease-soft),opacity .5s var(--ease)}
-.svc.in .stencil{clip-path:inset(0 0 0 0);opacity:1}
-.svc.in:nth-of-type(2) .stencil{transition-delay:.05s}
-.svc.in:nth-of-type(3) .stencil{transition-delay:.1s}
+.svc.in .plate{clip-path:inset(0 0 0 0);opacity:1}
+.svc.in:nth-of-type(2) .plate{transition-delay:.06s}
+.svc.in:nth-of-type(3) .plate{transition-delay:.12s}
 
 /* ============================================================
    9. Как проходит работа
@@ -444,7 +458,7 @@ button{font:inherit;color:inherit}
   .wire{display:none}
   .step__dot{display:none}
   .svc__row{gap:18px}
-  .stencil{max-width:100%}
+  .plate{padding:18px 18px}
 }
 @media (pointer:coarse){
   .btn,.hold{min-height:44px}
@@ -457,7 +471,7 @@ button{font:inherit;color:inherit}
   *,*::before,*::after{animation:none!important;transition:none!important}
   body{opacity:1}
   .reveal .part{opacity:1;transform:none}
-  .svc .stencil{clip-path:inset(0 0 0 0);opacity:1}
+  .svc .plate{clip-path:inset(0 0 0 0);opacity:1}
   .light__img{opacity:.62}
   .light__beam{opacity:1}
   .checks li{transform:none}
@@ -481,10 +495,10 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
 <nav class="nav" id="nav">
   <a class="brand" href="#top">
     <svg class="brand__mark" viewBox="0 0 64 64" aria-hidden="true">
-      <rect width="64" height="64" rx="13" fill="#0D0F12" stroke="#2A3038"></rect>
-      <rect x="11" y="12" width="42" height="6" rx="3" fill="#EAF2FF"></rect>
-      <path d="M18 52 32 22 46 52h-8.4l-5.6-12.6L26.4 52z" fill="#EDEFF2"></path>
-      <rect x="24" y="40" width="16" height="5" rx="2.5" fill="#FF3B2B"></rect>
+      <path d="M32 3.5 56 17v30L32 60.5 8 47V17z" fill="#12161B" stroke="#39414A" stroke-width="2"></path>
+      <rect x="17" y="15" width="30" height="4.6" rx="2.3" fill="#EAF2FF"></rect>
+      <path d="M20.5 47 32 24l11.5 23h-7l-4.5-9.6L27.5 47z" fill="#EDEFF2"></path>
+      <rect x="25.5" y="37.5" width="13" height="4.2" rx="2.1" fill="#FF3B2B"></rect>
     </svg>
     <span class="brand__name">Авто<span class="hl">Батя</span></span>
   </a>
@@ -595,11 +609,11 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
         <div class="svc__row">
           <div class="svc__col">
             <span class="svc__no">01</span>
-            <span class="stencil" aria-hidden="true">
-              <span class="stencil__over">Комплексная диагностика автомобиля</span>
-              <span class="stencil__paint">Комплексная диагностика автомобиля</span>
-            </span>
-            <h3 class="sr-only">Комплексная диагностика автомобиля</h3>
+            <div class="plate">
+              <span class="plate__grain" aria-hidden="true"></span>
+              <span class="plate__bolts" aria-hidden="true"></span>
+              <h3 class="plate__text">Комплексная диагностика автомобиля</h3>
+            </div>
           </div>
           <div class="svc__col">
             <p class="svc__text">Проверяем машину целиком, а не только то, что стучит. Находим причину и говорим, что с ней делать.</p>
@@ -617,11 +631,11 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
         <div class="svc__row">
           <div class="svc__col">
             <span class="svc__no">02</span>
-            <span class="stencil" aria-hidden="true">
-              <span class="stencil__over">Ремонт и обслуживание узлов и агрегатов</span>
-              <span class="stencil__paint">Ремонт и обслуживание узлов и агрегатов</span>
-            </span>
-            <h3 class="sr-only">Ремонт и обслуживание узлов и агрегатов</h3>
+            <div class="plate">
+              <span class="plate__grain" aria-hidden="true"></span>
+              <span class="plate__bolts" aria-hidden="true"></span>
+              <h3 class="plate__text">Ремонт и обслуживание узлов и агрегатов</h3>
+            </div>
           </div>
           <div class="svc__col">
             <p class="svc__text">Двигатель, коробка, подвеска, тормоза, рулевое. Плановое ТО и ремонт по результатам диагностики.</p>
@@ -640,11 +654,11 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
         <div class="svc__row">
           <div class="svc__col">
             <span class="svc__no">03</span>
-            <span class="stencil" aria-hidden="true">
-              <span class="stencil__over">Подбор автозапчастей</span>
-              <span class="stencil__paint">Подбор автозапчастей</span>
-            </span>
-            <h3 class="sr-only">Подбор автозапчастей</h3>
+            <div class="plate">
+              <span class="plate__grain" aria-hidden="true"></span>
+              <span class="plate__bolts" aria-hidden="true"></span>
+              <h3 class="plate__text">Подбор автозапчастей</h3>
+            </div>
           </div>
           <div class="svc__col">
             <p class="svc__text">Подберём по VIN, чтобы деталь встала как родная. Скажем, где нужен оригинал, а где аналог не хуже.</p>
