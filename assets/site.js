@@ -486,6 +486,7 @@
       lastNavSolid = solid;
       nav.classList.toggle('solid', solid);
     }
+    if (!pinned) driveScrollScenes();
     if (wireSvg && stepsBox && !pinned) {
       var r = stepsBox.getBoundingClientRect();
       var d = clamp((window.innerHeight * 0.72 - r.top) / Math.max(1, r.height * 0.86), 0, 1);
@@ -507,71 +508,84 @@
   }, { passive: true });
 
   /* ----------------------------------------------------------
-     8. Живой момент: свет в боксе
+     8. Свет в боксе и прейскурант: всё едет за прокруткой
      ---------------------------------------------------------- */
   var lightSec = document.getElementById('light');
-  var hold = document.getElementById('hold');
-  var lit = 0, holding = false, latched = false, holdRaf = null, holdLast = 0;
+  var priceList = document.getElementById('price-list');
+  var lit = -1;
 
   var checkItems = [].slice.call(document.querySelectorAll('.checks li')).map(function (el) {
     return { el: el, d: parseFloat(el.style.getPropertyValue('--d') || '0'), on: false };
   });
+  var priceItems = [].slice.call(document.querySelectorAll('.price')).map(function (el) {
+    return { el: el, d: parseFloat(el.style.getPropertyValue('--d') || '0'), on: false };
+  });
 
-  function paintLit() {
-    if (lightSec) lightSec.style.setProperty('--lit', lit.toFixed(3));
-    for (var i = 0; i < checkItems.length; i++) {
-      var it = checkItems[i];
-      var on = lit > it.d + 0.06;
+  // доля пройденного пути секции: 0, когда её верх на startF экрана, 1, когда дошёл до endF
+  function sectionProgress(el, startF, endF) {
+    var r = el.getBoundingClientRect();
+    var h = window.innerHeight;
+    var start = h * startF, finish = h * endF;
+    return clamp((start - r.top) / (start - finish), 0, 1);
+  }
+
+  function markSequence(items, p) {
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      var on = p > it.d + 0.04;
       if (on !== it.on) {
         it.on = on;
         it.el.classList.toggle('on', on);
       }
     }
   }
-  function holdTick(now) {
-    var dt = Math.min(100, now - (holdLast || now));
-    holdLast = now;
-    if (holding) lit += dt / 1500; else lit -= dt / 900;
-    lit = clamp(lit, 0, 1);
-    if (lit >= 1) latched = true;
-    if (latched) lit = 1;
-    paintLit();
-    if ((holding && lit < 1) || (!holding && lit > 0 && !latched)) {
-      holdRaf = requestAnimationFrame(holdTick);
-    } else {
-      holdRaf = null;
-      holdLast = 0;
+
+  // длинный список зажигается построчно: строка загорается, когда пересекает линию на экране
+  function markByLine(items, lineFrac) {
+    var line = window.innerHeight * lineFrac;
+    var i, want = [];
+    for (i = 0; i < items.length; i++) want.push(items[i].el.getBoundingClientRect().top < line);
+    for (i = 0; i < items.length; i++) {
+      if (want[i] !== items[i].on) {
+        items[i].on = want[i];
+        items[i].el.classList.toggle('on', want[i]);
+      }
     }
   }
-  function startHold() {
-    if (latched || holding) return;
-    holding = true;
-    if (holdRaf === null) { holdLast = 0; holdRaf = requestAnimationFrame(holdTick); }
+
+  function setLit(p) {
+    if (Math.abs(p - lit) < 0.006) return;
+    lit = p;
+    if (lightSec) lightSec.style.setProperty('--lit', p.toFixed(3));
+    markSequence(checkItems, p);
   }
-  function endHold() {
-    if (!holding) return;
-    holding = false;
-    if (holdRaf === null && lit > 0 && !latched) { holdLast = 0; holdRaf = requestAnimationFrame(holdTick); }
+
+  function driveScrollScenes() {
+    if (lightSec) setLit(smoothstep(sectionProgress(lightSec, 0.86, 0.3), 0, 1));
+    if (priceList) markByLine(priceItems, 0.82);
   }
-  function latchNow() {
-    latched = true;
-    lit = 1;
-    paintLit();
-  }
-  if (hold) {
-    hold.addEventListener('pointerdown', function (e) { e.preventDefault(); startHold(); });
-    hold.addEventListener('pointerup', endHold);
-    hold.addEventListener('pointercancel', endHold);
-    hold.addEventListener('pointerleave', endHold);
-    hold.addEventListener('blur', endHold);
-    hold.addEventListener('keydown', function (e) {
-      if (e.key === ' ' || e.code === 'Space') { e.preventDefault(); startHold(); }
-      else if (e.key === 'Enter') { e.preventDefault(); latchNow(); }
+
+  /* ----------------------------------------------------------
+     8б. Искры по краям страницы
+     ---------------------------------------------------------- */
+  function buildSparks() {
+    var wraps = [].slice.call(document.querySelectorAll('.sparks'));
+    if (!wraps.length || wraps[0].childNodes.length) return;
+    if (reduceQuery.matches) return;
+    if (matchMedia('(max-width: 1200px)').matches) return;
+    var r = rng(1409);
+    wraps.forEach(function (w) {
+      for (var i = 0; i < 11; i++) {
+        var sp = document.createElement('i');
+        sp.style.left = (10 + r() * 78).toFixed(1) + '%';
+        sp.style.height = (7 + r() * 13).toFixed(0) + 'px';
+        sp.style.animationDuration = (8 + r() * 9).toFixed(1) + 's';
+        sp.style.animationDelay = (-r() * 17).toFixed(1) + 's';
+        sp.style.setProperty('--dx', ((r() * 2 - 1) * 26).toFixed(0) + 'px');
+        sp.style.opacity = (0.4 + r() * 0.5).toFixed(2);
+        w.appendChild(sp);
+      }
     });
-    hold.addEventListener('keyup', function (e) {
-      if (e.key === ' ' || e.code === 'Space') { e.preventDefault(); endHold(); }
-    });
-    hold.addEventListener('click', function (e) { e.preventDefault(); });
   }
 
   /* ----------------------------------------------------------
@@ -584,18 +598,16 @@
     reveals.forEach(function (el) { el.classList.add('in', 'done'); });
     [].slice.call(document.querySelectorAll('.svc')).forEach(function (el) { el.classList.add('in'); });
     if (wireSvg) wireSvg.style.setProperty('--draw', 1);
-    latchNow();
+    setLit(1);
+    markSequence(priceItems, 1);
     if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
-    if (holdRaf !== null) { cancelAnimationFrame(holdRaf); holdRaf = null; }
   }
 
   function unpinFinalStates() {
     if (!pinned) return;
     pinned = false;
     lastDraw = -1;
-    latched = false;
-    lit = 0;
-    paintLit();
+    lit = -1;
     onPageScroll();
   }
 
@@ -621,6 +633,6 @@
   } else {
     applyHeroMode();
   }
+  buildSparks();
   onPageScroll();
-  paintLit();
 })();

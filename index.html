@@ -97,6 +97,25 @@ button{font:inherit;color:inherit}
 @keyframes floorDrift{from{transform:translate3d(0,0,0)}to{transform:translate3d(96px,0,0)}}
 
 /* ============================================================
+   2б. Искры по краям страницы, как от сварки
+   ============================================================ */
+.sparks{position:fixed;top:0;bottom:0;z-index:3;pointer-events:none;overflow:hidden;
+  width:calc((100vw - 1160px) / 2)}
+.sparks--l{left:0}
+.sparks--r{right:0}
+.sparks i{position:absolute;top:0;width:2px;border-radius:2px;
+  background:linear-gradient(180deg,rgba(255,205,140,0) 0%,#FFD79B 40%,#FF8A3B 100%);
+  box-shadow:0 0 7px 1px rgba(255,150,60,.45);
+  animation:fall linear infinite}
+@keyframes fall{
+  0%{transform:translate3d(0,-12vh,0) scaleY(.55)}
+  6%{opacity:1}
+  72%{opacity:.85}
+  100%{transform:translate3d(var(--dx,0px),110vh,0) scaleY(1);opacity:0}
+}
+@media (max-width:1200px){.sparks{display:none}}
+
+/* ============================================================
    3. Шапка
    ============================================================ */
 .nav{position:fixed;top:0;left:0;right:0;z-index:60;
@@ -340,6 +359,30 @@ button{font:inherit;color:inherit}
 .svc.in:nth-of-type(3) .plate{transition-delay:.12s}
 
 /* ============================================================
+   8б. Прейскурант
+   ============================================================ */
+.prices{background:linear-gradient(to bottom,var(--canvas) 0%,#0B0D10 60%,var(--canvas) 100%)}
+.price-list{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.price{position:relative;display:grid;grid-template-columns:1fr auto;gap:4px clamp(18px,3vw,44px);
+  align-items:baseline;padding:20px clamp(14px,2vw,24px);border-bottom:1px solid var(--line);
+  transition:background .55s var(--ease),border-color .55s var(--ease)}
+.price::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--accent);
+  transform:scaleY(0);transform-origin:50% 0;transition:transform .55s var(--ease)}
+.price.on{background:linear-gradient(90deg,rgba(30,35,42,.92),rgba(22,26,31,0) 78%)}
+.price.on::before{transform:scaleY(1)}
+.price__name{grid-column:1;font-family:var(--display);font-weight:700;text-transform:uppercase;
+  font-size:clamp(18px,1.9vw,25px);letter-spacing:.01em;color:var(--text-secondary);
+  transition:color .55s var(--ease)}
+.price__val{grid-column:2;grid-row:1 / span 2;align-self:center;white-space:nowrap;
+  font-family:var(--display);font-weight:700;font-size:clamp(20px,2.2vw,30px);
+  color:var(--text-secondary);transition:color .55s var(--ease)}
+.price__val em{font-style:normal;font-size:.62em;color:var(--text-secondary)}
+.price__desc{grid-column:1;font-size:15px;color:var(--text-secondary);max-width:56ch}
+.price.on .price__name,.price.on .price__val{color:var(--text-primary)}
+.price.on .price__val em{color:var(--accent)}
+.price-foot{margin-top:26px;font-size:15px;color:var(--text-secondary)}
+
+/* ============================================================
    9. Как проходит работа
    ============================================================ */
 .process{background:linear-gradient(to bottom,var(--canvas) 0%,#0B0D10 100%)}
@@ -374,17 +417,13 @@ button{font:inherit;color:inherit}
 .light__in{position:relative;display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(28px,5vw,72px);align-items:center}
 .light h2{font-size:clamp(30px,4.2vw,54px);text-transform:uppercase;max-width:14ch}
 .light__lede{margin-top:18px;color:var(--text-secondary);font-size:17px;max-width:44ch}
-.hold{margin-top:30px;display:inline-flex;align-items:center;gap:14px;padding:16px 24px;
-  background:transparent;border:1px solid var(--neon-dim);border-radius:2px;cursor:pointer;
-  font-family:var(--mono);font-size:13px;letter-spacing:.12em;text-transform:uppercase;
-  transition:border-color .4s var(--ease),background .4s var(--ease)}
-.hold:hover{border-color:var(--neon-dim);background:rgba(234,242,255,.05)}
-.hold__ring{width:26px;height:26px;flex:0 0 auto}
-.hold__ring circle{fill:none;stroke-width:3}
-.hold__track{stroke:var(--line)}
-.hold__val{stroke:var(--accent);stroke-dasharray:69.1;stroke-dashoffset:calc(69.1 * (1 - var(--lit,0)));
+.dial{margin-top:30px;display:inline-flex;align-items:center;gap:14px;
+  font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-secondary)}
+.dial__ring{width:30px;height:30px;flex:0 0 auto}
+.dial__ring circle{fill:none;stroke-width:3}
+.dial__track{stroke:var(--line)}
+.dial__val{stroke:var(--accent);stroke-dasharray:69.1;stroke-dashoffset:calc(69.1 * (1 - var(--lit,0)));
   transform:rotate(-90deg);transform-origin:50% 50%}
-.hold__hint{display:block;margin-top:12px;font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--text-secondary);max-width:40ch}
 .checks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
 .checks li{display:flex;gap:14px;align-items:baseline;padding:15px 18px;
   background:rgba(18,21,26,.55);border:1px solid var(--line);border-radius:3px;
@@ -452,6 +491,9 @@ button{font:inherit;color:inherit}
 @media (max-width:420px){.mono{letter-spacing:.1em;font-size:11px}}
 @media (max-width:720px){
   body{font-size:16px}
+  .price{grid-template-columns:1fr auto;padding:18px 12px;gap:8px 14px}
+  .price__val{grid-row:1;align-self:baseline}
+  .price__desc{grid-column:1 / -1;font-size:14px;max-width:100%}
   .nav__links{display:none}
   .nav__call{margin-left:auto}
   .process__grid{grid-template-columns:1fr}
@@ -461,7 +503,7 @@ button{font:inherit;color:inherit}
   .plate{padding:18px 18px}
 }
 @media (pointer:coarse){
-  .btn,.hold{min-height:44px}
+  .btn{min-height:44px}
 }
 
 /* ============================================================
@@ -475,7 +517,9 @@ button{font:inherit;color:inherit}
   .light__img{opacity:.62}
   .light__beam{opacity:1}
   .checks li{transform:none}
-  .hold__val{stroke-dashoffset:0}
+  .dial__val{stroke-dashoffset:0}
+  .price.on{background:linear-gradient(90deg,rgba(30,35,42,.92),rgba(22,26,31,0) 78%)}
+  .sparks{display:none}
   .wire .wire__lit{stroke-dashoffset:0}
 }
 body.paused *,body.paused *::before,body.paused *::after{animation-play-state:paused!important}
@@ -485,6 +529,9 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
 </head>
 <body>
 <a class="skip" href="#main">Перейти к содержимому</a>
+
+<div class="sparks sparks--l" aria-hidden="true"></div>
+<div class="sparks sparks--r" aria-hidden="true"></div>
 
 <div class="env" aria-hidden="true">
   <div class="env__glow"></div>
@@ -504,6 +551,7 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
   </a>
   <div class="nav__links">
     <a href="#services">Услуги</a>
+    <a href="#prices">Цены</a>
     <a href="#process">Как работаем</a>
     <a href="#contacts">Контакты</a>
   </div>
@@ -673,6 +721,70 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
     </div>
   </section>
 
+
+  <!-- ===================== ЦЕНЫ ===================== -->
+  <section class="sec prices" id="prices">
+    <div class="wrap">
+      <div class="sec__head reveal">
+        <div class="part">
+          <span class="tube" aria-hidden="true"></span>
+          <h2 class="sec__title">Сколько это стоит</h2>
+        </div>
+        <p class="sec__note part">Цены на частые работы. Точную сумму называем после диагностики и согласуем до начала.</p>
+      </div>
+
+      <ul class="price-list" id="price-list">
+          <li class="price" style="--d:0.0">
+            <span class="price__name">Компьютерная диагностика</span>
+            <span class="price__val">от 1500 <em>₽</em></span>
+            <span class="price__desc">Выявление неисправностей электронной части диагностическим оборудованием.</span>
+          </li>
+          <li class="price" style="--d:0.098">
+            <span class="price__name">Диагностика ходовой части</span>
+            <span class="price__val">от 600 <em>₽</em></span>
+            <span class="price__desc">Осмотр подвески и поиск неисправности.</span>
+          </li>
+          <li class="price" style="--d:0.195">
+            <span class="price__name">Эндоскопия двигателя</span>
+            <span class="price__val">от 1500 <em>₽</em></span>
+            <span class="price__desc">Смотрим двигатель изнутри, определяем состояние поршневой группы.</span>
+          </li>
+          <li class="price" style="--d:0.292">
+            <span class="price__name">Ремонт подвески</span>
+            <span class="price__val">от 600 <em>₽</em></span>
+            <span class="price__desc">Комплексный ремонт ходовой части или локальное устранение неисправности.</span>
+          </li>
+          <li class="price" style="--d:0.39">
+            <span class="price__name">Ремонт тормозной системы</span>
+            <span class="price__val">от 800 <em>₽</em></span>
+            <span class="price__desc">Замена колодок, дисков, трубок и шлангов, ремонт главных и рабочих цилиндров.</span>
+          </li>
+          <li class="price" style="--d:0.488">
+            <span class="price__name">Замена ремня ГРМ</span>
+            <span class="price__val">от 4500 <em>₽</em></span>
+            <span class="price__desc">Замена комплекта ГРМ.</span>
+          </li>
+          <li class="price" style="--d:0.585">
+            <span class="price__name">Замена сцепления</span>
+            <span class="price__val">от 5000 <em>₽</em></span>
+            <span class="price__desc">Замена диска, корзины и выжимного подшипника.</span>
+          </li>
+          <li class="price" style="--d:0.682">
+            <span class="price__name">Ремонт выхлопной системы</span>
+            <span class="price__val">от 1500 <em>₽</em></span>
+            <span class="price__desc">Замена глушителей, резонаторов, катализаторов и гофр, сварочные работы.</span>
+          </li>
+          <li class="price" style="--d:0.78">
+            <span class="price__name">Замена масла</span>
+            <span class="price__val">от 500 <em>₽</em></span>
+            <span class="price__desc">Замена масла и фильтра.</span>
+          </li>
+      </ul>
+
+      <p class="price-foot">Не нашли свою работу в списке? Позвоните, посчитаем по вашей машине.</p>
+    </div>
+  </section>
+
   <!-- ===================== КАК ПРОХОДИТ РАБОТА ===================== -->
   <section class="sec process" id="process">
     <div class="wrap">
@@ -730,15 +842,14 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
       <div>
         <span class="tube tube--flick" aria-hidden="true"></span>
         <h2>Включите свет в боксе</h2>
-        <p class="light__lede">Обычно клиент видит только счёт. Зажмите кнопку, и станет видно, что мы смотрим на комплексной диагностике.</p>
-        <button class="hold" id="hold" type="button" aria-describedby="hold-hint">
-          <svg class="hold__ring" viewBox="0 0 26 26" aria-hidden="true">
-            <circle class="hold__track" cx="13" cy="13" r="11"></circle>
-            <circle class="hold__val" cx="13" cy="13" r="11"></circle>
+        <p class="light__lede">Обычно клиент видит только счёт. Крутите дальше, и в боксе разгорается свет: становится видно, что мы смотрим на комплексной диагностике. Назад прокрутите, и свет погаснет.</p>
+        <div class="dial" aria-hidden="true">
+          <svg class="dial__ring" viewBox="0 0 26 26">
+            <circle class="dial__track" cx="13" cy="13" r="11"></circle>
+            <circle class="dial__val" cx="13" cy="13" r="11"></circle>
           </svg>
-          Зажать и держать
-        </button>
-        <span class="hold__hint" id="hold-hint">Держите кнопку. С клавиатуры: пробел удерживать, Enter включает сразу.</span>
+          <span class="dial__label">Свет идёт за прокруткой</span>
+        </div>
       </div>
       <ul class="checks" id="checks">
         <li style="--d:0.06"><b>01</b><span>Ошибки во всех блоках, а не только Check Engine</span></li>
