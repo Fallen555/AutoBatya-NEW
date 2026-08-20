@@ -487,6 +487,7 @@
       nav.classList.toggle('solid', solid);
     }
     if (!pinned) driveScrollScenes();
+    updateSparks();
     if (wireSvg && stepsBox && !pinned) {
       var r = stepsBox.getBoundingClientRect();
       var d = clamp((window.innerHeight * 0.72 - r.top) / Math.max(1, r.height * 0.86), 0, 1);
@@ -566,26 +567,190 @@
   }
 
   /* ----------------------------------------------------------
-     8б. Искры по краям страницы
+     8б. Сварка по краям страницы: вспышка и сноп искр
      ---------------------------------------------------------- */
-  function buildSparks() {
-    var wraps = [].slice.call(document.querySelectorAll('.sparks'));
-    if (!wraps.length || wraps[0].childNodes.length) return;
-    if (reduceQuery.matches) return;
-    if (matchMedia('(max-width: 1200px)').matches) return;
-    var r = rng(1409);
-    wraps.forEach(function (w) {
-      for (var i = 0; i < 11; i++) {
-        var sp = document.createElement('i');
-        sp.style.left = (10 + r() * 78).toFixed(1) + '%';
-        sp.style.height = (7 + r() * 13).toFixed(0) + 'px';
-        sp.style.animationDuration = (8 + r() * 9).toFixed(1) + 's';
-        sp.style.animationDelay = (-r() * 17).toFixed(1) + 's';
-        sp.style.setProperty('--dx', ((r() * 2 - 1) * 26).toFixed(0) + 'px');
-        sp.style.opacity = (0.4 + r() * 0.5).toFixed(2);
-        w.appendChild(sp);
+  var sparkWraps = [].slice.call(document.querySelectorAll('.sparks'));
+  var sparkCtx = [];
+  var sparkSize = [];
+  var parts = [];
+  var flashes = [];
+  var nextBurst = [0, 0];
+  var sparksOn = false;
+  var sparkRaf = null;
+  var sparkLast = 0;
+  var srand = rng(90210);
+  var servicesSec = document.getElementById('services');
+
+  function sparksAllowed() {
+    return sparkWraps.length > 0 &&
+      !reduceQuery.matches &&
+      !matchMedia('(max-width: 1200px)').matches &&
+      !document.hidden;
+  }
+
+  function sizeSparks() {
+    for (var i = 0; i < sparkWraps.length; i++) {
+      var c = sparkCtx[i] && sparkCtx[i].canvas;
+      if (!c) continue;
+      var w = Math.max(1, Math.round(sparkWraps[i].clientWidth));
+      var h = Math.max(1, Math.round(window.innerHeight));
+      if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
+      sparkSize[i] = { w: w, h: h };
+    }
+  }
+
+  function initSparks() {
+    if (sparkCtx.length || !sparkWraps.length) return;
+    for (var i = 0; i < sparkWraps.length; i++) {
+      var c = document.createElement('canvas');
+      sparkWraps[i].appendChild(c);
+      sparkCtx.push(c.getContext('2d'));
+    }
+    sizeSparks();
+    window.addEventListener('resize', sizeSparks, { passive: true });
+  }
+
+  // один разряд: короткая вспышка и сноп искр из точки
+  function burst(side) {
+    var sz = sparkSize[side];
+    if (!sz) return;
+    var x = sz.w * (0.28 + srand() * 0.5);
+    var y = sz.h * (0.12 + srand() * 0.62);
+    flashes.push({ side: side, x: x, y: y, life: 1, r: 34 + srand() * 30 });
+
+    var n = 16 + Math.round(srand() * 16);
+    for (var i = 0; i < n; i++) {
+      var ang = (-0.35 + srand() * 1.9) * Math.PI;   // веером, больше вниз и в стороны
+      var sp = 110 + srand() * 340;
+      parts.push({
+        side: side, x: x, y: y, px: x, py: y,
+        vx: Math.cos(ang) * sp * (0.5 + srand() * 0.8),
+        vy: Math.abs(Math.sin(ang)) * sp * 0.55 - 60 - srand() * 90,
+        life: 1, decay: 0.32 + srand() * 0.38,
+        size: 0.9 + srand() * 1.5,
+        hot: srand() < 0.4
+      });
+    }
+    // редкие длинные искры, которые улетают дальше всех
+    if (srand() < 0.5) {
+      for (var j = 0; j < 3; j++) {
+        parts.push({
+          side: side, x: x, y: y, px: x, py: y,
+          vx: (srand() - 0.5) * 150, vy: -140 - srand() * 120,
+          life: 1, decay: 0.22 + srand() * 0.16, size: 1.4 + srand(), hot: true
+        });
       }
-    });
+    }
+  }
+
+  function sparkTick(now) {
+    var dt = Math.min(0.05, (now - (sparkLast || now)) / 1000);
+    sparkLast = now;
+
+    for (var side = 0; side < sparkCtx.length; side++) {
+      if (now > nextBurst[side]) {
+        burst(side);
+        nextBurst[side] = now + 2000 + srand() * 4200;
+      }
+      var sz = sparkSize[side];
+      var g = sparkCtx[side];
+      if (!g || !sz) continue;
+      g.clearRect(0, 0, sz.w, sz.h);
+      g.globalCompositeOperation = 'lighter';
+    }
+
+    // вспышки
+    for (var f = flashes.length - 1; f >= 0; f--) {
+      var fl = flashes[f];
+      fl.life -= dt * 3.4;
+      if (fl.life <= 0) { flashes.splice(f, 1); continue; }
+      var gf = sparkCtx[fl.side];
+      if (!gf) continue;
+      var rr = fl.r * (1.5 - fl.life * 0.5);
+      var grd = gf.createRadialGradient(fl.x, fl.y, 0, fl.x, fl.y, rr);
+      var a = fl.life * fl.life;
+      grd.addColorStop(0, 'rgba(255,246,225,' + (0.9 * a).toFixed(3) + ')');
+      grd.addColorStop(0.35, 'rgba(255,190,110,' + (0.45 * a).toFixed(3) + ')');
+      grd.addColorStop(1, 'rgba(255,120,40,0)');
+      gf.fillStyle = grd;
+      gf.beginPath();
+      gf.arc(fl.x, fl.y, rr, 0, 6.2832);
+      gf.fill();
+    }
+
+    // искры
+    for (var i = parts.length - 1; i >= 0; i--) {
+      var p = parts[i];
+      p.life -= dt * p.decay;
+      if (p.life <= 0) { parts.splice(i, 1); continue; }
+      p.px = p.x; p.py = p.y;
+      p.vy += 700 * dt;              // тяжесть
+      p.vx *= (1 - 1.1 * dt);        // сопротивление воздуха
+      p.vy *= (1 - 0.5 * dt);
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+
+      var szp = sparkSize[p.side];
+      var gp = sparkCtx[p.side];
+      if (!gp || !szp) continue;
+      if (p.y > szp.h + 30 || p.x < -40 || p.x > szp.w + 40) { parts.splice(i, 1); continue; }
+
+      var t = p.life;
+      var flick = 0.55 + srand() * 0.45;                 // искра дрожит
+      var alpha = Math.min(1, t * 1.4) * flick;
+      var r = 255;
+      var gc = Math.round(120 + 135 * t);
+      var b = Math.round(30 + 120 * t * t);
+      gp.strokeStyle = 'rgba(' + r + ',' + gc + ',' + b + ',' + alpha.toFixed(3) + ')';
+      gp.lineWidth = p.size * (p.hot ? 1.5 : 1);
+      gp.lineCap = 'round';
+      gp.beginPath();
+      gp.moveTo(p.x - p.vx * 0.05, p.y - p.vy * 0.05);   // хвост по направлению полёта
+      gp.lineTo(p.x, p.y);
+      gp.stroke();
+      if (p.hot) {
+        gp.fillStyle = 'rgba(255,240,210,' + (alpha * 0.8).toFixed(3) + ')';
+        gp.beginPath();
+        gp.arc(p.x, p.y, p.size * 0.9, 0, 6.2832);
+        gp.fill();
+      }
+    }
+
+    if (sparksOn) sparkRaf = requestAnimationFrame(sparkTick);
+    else stopSparks();
+  }
+
+  function stopSparks() {
+    if (sparkRaf !== null) { cancelAnimationFrame(sparkRaf); sparkRaf = null; }
+    parts.length = 0;
+    flashes.length = 0;
+    sparkLast = 0;
+    for (var i = 0; i < sparkCtx.length; i++) {
+      var sz = sparkSize[i];
+      if (sz) sparkCtx[i].clearRect(0, 0, sz.w, sz.h);
+    }
+  }
+
+  // сварка включается только после того, как машина прокручена, на блоке услуг
+  function updateSparks() {
+    var want = false;
+    if (sparksAllowed() && servicesSec) {
+      want = servicesSec.getBoundingClientRect().top < window.innerHeight * 0.85;
+    }
+    if (want === sparksOn) return;
+    sparksOn = want;
+    sparkWraps.forEach(function (w) { w.classList.toggle('live', want); });
+    if (want) {
+      initSparks();
+      sizeSparks();
+      var t = performance.now();
+      nextBurst[0] = t + 250;
+      nextBurst[1] = t + 1400;
+      sparkLast = 0;
+      if (sparkRaf === null) sparkRaf = requestAnimationFrame(sparkTick);
+    } else {
+      stopSparks();
+    }
   }
 
   /* ----------------------------------------------------------
@@ -626,6 +791,7 @@
      ---------------------------------------------------------- */
   document.addEventListener('visibilitychange', function () {
     document.body.classList.toggle('paused', document.hidden);
+    updateSparks();
   });
 
   if (reduceQuery.matches) {
@@ -633,6 +799,5 @@
   } else {
     applyHeroMode();
   }
-  buildSparks();
   onPageScroll();
 })();

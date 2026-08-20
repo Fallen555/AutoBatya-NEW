@@ -97,22 +97,14 @@ button{font:inherit;color:inherit}
 @keyframes floorDrift{from{transform:translate3d(0,0,0)}to{transform:translate3d(96px,0,0)}}
 
 /* ============================================================
-   2б. Искры по краям страницы, как от сварки
+   2б. Искры по краям страницы: вспышки сварки на холсте
    ============================================================ */
 .sparks{position:fixed;top:0;bottom:0;z-index:3;pointer-events:none;overflow:hidden;
-  width:calc((100vw - 1160px) / 2)}
+  width:calc((100vw - 1160px) / 2);opacity:0;transition:opacity 1.1s var(--ease)}
+.sparks.live{opacity:1}
 .sparks--l{left:0}
 .sparks--r{right:0}
-.sparks i{position:absolute;top:0;width:2px;border-radius:2px;
-  background:linear-gradient(180deg,rgba(255,205,140,0) 0%,#FFD79B 40%,#FF8A3B 100%);
-  box-shadow:0 0 7px 1px rgba(255,150,60,.45);
-  animation:fall linear infinite}
-@keyframes fall{
-  0%{transform:translate3d(0,-12vh,0) scaleY(.55)}
-  6%{opacity:1}
-  72%{opacity:.85}
-  100%{transform:translate3d(var(--dx,0px),110vh,0) scaleY(1);opacity:0}
-}
+.sparks canvas{display:block;width:100%;height:100%}
 @media (max-width:1200px){.sparks{display:none}}
 
 /* ============================================================
@@ -409,27 +401,45 @@ button{font:inherit;color:inherit}
 .light{position:relative;overflow:hidden;background:var(--canvas-deep);
   padding:clamp(88px,13vh,150px) 0}
 .light__img{position:absolute;inset:0;background-image:url('assets/still-side.jpg');background-size:cover;background-position:50% 54%;
-  opacity:calc(.16 + .5*var(--lit,0))}
-.light__veil{position:absolute;inset:0;background:linear-gradient(to right,rgba(8,10,12,.95) 0%,rgba(8,10,12,.7) 46%,rgba(8,10,12,.86) 100%)}
-.light__beam{position:absolute;left:0;right:0;top:0;height:66%;pointer-events:none;
-  background:radial-gradient(ellipse 46% 84% at 50% 0%,rgba(234,242,255,.34),transparent 70%);
+  opacity:calc(.1 + .9*var(--lit,0))}
+.light__veil{position:absolute;inset:0;background:linear-gradient(to right,rgba(8,10,12,.95) 0%,rgba(8,10,12,.7) 46%,rgba(8,10,12,.86) 100%);
+  opacity:calc(1 - .34*var(--lit,0))}
+.light__beam{position:absolute;left:0;right:0;top:0;height:80%;pointer-events:none;
+  background:radial-gradient(ellipse 52% 90% at 50% 0%,rgba(234,242,255,.5),transparent 72%),
+             radial-gradient(ellipse 26% 60% at 22% 0%,rgba(198,226,255,.42),transparent 70%);
   opacity:var(--lit,0)}
+.light__textveil{position:absolute;left:0;top:0;bottom:0;width:min(64%,780px);pointer-events:none;
+  background:linear-gradient(90deg,rgba(8,10,12,.94) 0%,rgba(8,10,12,.72) 46%,rgba(8,10,12,0) 100%);
+  opacity:calc(.3 + .7*var(--lit,0))}
+.light__bloom{position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen;
+  background:radial-gradient(ellipse 70% 46% at 50% 12%,rgba(206,230,255,.42),transparent 66%);
+  opacity:calc(var(--lit,0) * var(--lit,0))}
+/* лампа под текстом: гаснет и разгорается вместе со светом */
+.lampbar{position:relative;display:block;margin-top:34px;width:min(280px,62%);height:7px;border-radius:4px;
+  background:linear-gradient(180deg,#242A31,#171B21);box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+.lampbar::before{content:"";position:absolute;inset:0;border-radius:4px;
+  background:linear-gradient(180deg,#FFFFFF,#D6E8FF);opacity:var(--lit,0)}
+.lampbar::after{content:"";position:absolute;left:-34%;right:-34%;top:-560%;bottom:-560%;pointer-events:none;
+  background:radial-gradient(ellipse 44% 50% at 50% 50%,rgba(198,226,255,.55),transparent 70%);
+  opacity:calc(var(--lit,0) * var(--lit,0))}
 .light__in{position:relative;display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(28px,5vw,72px);align-items:center}
 .light h2{font-size:clamp(30px,4.2vw,54px);text-transform:uppercase;max-width:14ch}
-.light__lede{margin-top:18px;color:var(--text-secondary);font-size:17px;max-width:44ch}
-.dial{margin-top:30px;display:inline-flex;align-items:center;gap:14px;
-  font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-secondary)}
-.dial__ring{width:30px;height:30px;flex:0 0 auto}
-.dial__ring circle{fill:none;stroke-width:3}
-.dial__track{stroke:var(--line)}
-.dial__val{stroke:var(--accent);stroke-dasharray:69.1;stroke-dashoffset:calc(69.1 * (1 - var(--lit,0)));
-  transform:rotate(-90deg);transform-origin:50% 50%}
+.light__lede{margin-top:18px;color:var(--text-primary);font-size:17px;max-width:44ch;text-shadow:0 1px 10px rgba(5,8,12,.75)}
 .checks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
 .checks li{display:flex;gap:14px;align-items:baseline;padding:15px 18px;
   background:rgba(18,21,26,.55);border:1px solid var(--line);border-radius:3px;
   transform:translateY(9px);
   transition:transform .5s var(--ease),background .5s var(--ease),border-color .5s var(--ease),box-shadow .6s var(--ease)}
-.checks li.on{transform:none;background:var(--panel-2);border-color:var(--neon-dim);box-shadow:0 10px 34px rgba(0,0,0,.36)}
+.checks li.on{transform:none;background:linear-gradient(180deg,#232A33,#1A1F26);
+  border-color:rgba(198,226,255,.6);
+  box-shadow:0 0 0 1px rgba(198,226,255,.3),0 0 34px rgba(130,185,255,.42),
+             inset 0 0 30px rgba(130,185,255,.16),0 12px 34px rgba(0,0,0,.45);
+  animation:ignite .6s var(--ease) 1}
+@keyframes ignite{
+  0%{box-shadow:0 0 0 1px rgba(214,236,255,.7),0 0 60px rgba(160,205,255,.7),inset 0 0 46px rgba(160,205,255,.35),0 12px 34px rgba(0,0,0,.4)}
+  38%{box-shadow:0 0 0 1px rgba(198,226,255,.3),0 0 16px rgba(130,185,255,.2),inset 0 0 20px rgba(130,185,255,.08),0 12px 34px rgba(0,0,0,.4)}
+  100%{box-shadow:0 0 0 1px rgba(198,226,255,.22),0 0 26px rgba(130,185,255,.3),inset 0 0 28px rgba(130,185,255,.12),0 12px 34px rgba(0,0,0,.4)}
+}
 .checks b{font-family:var(--mono);font-size:12px;letter-spacing:.14em;font-weight:700;flex:0 0 auto;
   color:var(--text-secondary);transition:color .5s var(--ease)}
 .checks li.on b{color:var(--accent)}
@@ -517,7 +527,6 @@ button{font:inherit;color:inherit}
   .light__img{opacity:.62}
   .light__beam{opacity:1}
   .checks li{transform:none}
-  .dial__val{stroke-dashoffset:0}
   .price.on{background:linear-gradient(90deg,rgba(30,35,42,.92),rgba(22,26,31,0) 78%)}
   .sparks{display:none}
   .wire .wire__lit{stroke-dashoffset:0}
@@ -838,18 +847,14 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
     <div class="light__img" aria-hidden="true"></div>
     <div class="light__veil" aria-hidden="true"></div>
     <div class="light__beam" aria-hidden="true"></div>
+    <div class="light__bloom" aria-hidden="true"></div>
+    <div class="light__textveil" aria-hidden="true"></div>
     <div class="wrap light__in">
       <div>
         <span class="tube tube--flick" aria-hidden="true"></span>
         <h2>Включите свет в боксе</h2>
         <p class="light__lede">Обычно клиент видит только счёт. Крутите дальше, и в боксе разгорается свет: становится видно, что мы смотрим на комплексной диагностике. Назад прокрутите, и свет погаснет.</p>
-        <div class="dial" aria-hidden="true">
-          <svg class="dial__ring" viewBox="0 0 26 26">
-            <circle class="dial__track" cx="13" cy="13" r="11"></circle>
-            <circle class="dial__val" cx="13" cy="13" r="11"></circle>
-          </svg>
-          <span class="dial__label">Свет идёт за прокруткой</span>
-        </div>
+        <span class="lampbar" aria-hidden="true"></span>
       </div>
       <ul class="checks" id="checks">
         <li style="--d:0.06"><b>01</b><span>Ошибки во всех блоках, а не только Check Engine</span></li>
