@@ -754,6 +754,66 @@
   }
 
   /* ----------------------------------------------------------
+     8в. Мини-карта: наклон за мышкой и разворот по клику
+     ---------------------------------------------------------- */
+  (function miniMap() {
+    var map = document.getElementById('minimap');
+    if (!map) return;
+    var card = map.querySelector('.minimap__card');
+    var toggle = map.querySelector('.minimap__toggle');
+    var link = map.querySelector('.minimap__link');
+    var hint = document.getElementById('minimap-hint');
+    var open = false;
+    var tiltRaf = null;
+    var wantRx = 0, wantRy = 0, showRx = 0, showRy = 0;
+
+    function canTilt() {
+      return !reduceQuery.matches && !matchMedia('(pointer: coarse)').matches;
+    }
+
+    function tiltTick() {
+      showRx += (wantRx - showRx) * 0.18;
+      showRy += (wantRy - showRy) * 0.18;
+      card.style.setProperty('--rx', showRx.toFixed(2) + 'deg');
+      card.style.setProperty('--ry', showRy.toFixed(2) + 'deg');
+      if (Math.abs(wantRx - showRx) > 0.02 || Math.abs(wantRy - showRy) > 0.02) {
+        tiltRaf = requestAnimationFrame(tiltTick);
+      } else {
+        tiltRaf = null;
+      }
+    }
+    function kickTilt() {
+      if (tiltRaf === null) tiltRaf = requestAnimationFrame(tiltTick);
+    }
+
+    map.addEventListener('mousemove', function (e) {
+      if (!canTilt()) return;
+      var r = card.getBoundingClientRect();
+      var dx = (e.clientX - (r.left + r.width / 2)) / (r.width / 2);
+      var dy = (e.clientY - (r.top + r.height / 2)) / (r.height / 2);
+      wantRy = clamp(dx, -1, 1) * 8;
+      wantRx = clamp(dy, -1, 1) * -8;
+      kickTilt();
+    });
+    map.addEventListener('mouseleave', function () {
+      wantRx = 0; wantRy = 0;
+      kickTilt();
+    });
+
+    function setOpen(next) {
+      open = next;
+      map.classList.toggle('open', open);
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      toggle.querySelector('.sr-only').textContent = open ? 'Свернуть карту проезда' : 'Развернуть карту проезда';
+      if (link) link.setAttribute('tabindex', open ? '0' : '-1');
+      if (hint) hint.textContent = open ? 'Нажмите ещё раз, чтобы свернуть' : 'Нажмите на карту, чтобы развернуть';
+    }
+
+    toggle.addEventListener('click', function () { setOpen(!open); });
+    if (link) link.addEventListener('click', function (e) { e.stopPropagation(); });
+  })();
+
+  /* ----------------------------------------------------------
      9. Меньше движения, в обе стороны
      ---------------------------------------------------------- */
   var pinned = false;

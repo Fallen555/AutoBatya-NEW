@@ -466,6 +466,96 @@ button{font:inherit;color:inherit}
   border-bottom:2px solid var(--accent-muted);transition:border-color .4s var(--ease)}
 .phone-big:hover{border-color:var(--accent)}
 
+
+/* ============================================================
+   11б. Мини-карта: наклон за мышкой, разворот по клику
+   ============================================================ */
+.minimap{margin-top:34px;perspective:1000px;width:100%;max-width:420px}
+.minimap__card{position:relative;overflow:hidden;border-radius:16px;
+  width:min(300px,100%);height:170px;max-width:100%;
+  background:linear-gradient(160deg,#151A20,#0E1216);
+  border:1px solid var(--line);
+  transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));
+  transform-style:preserve-3d;
+  transition:width .55s var(--ease-soft),height .55s var(--ease-soft),
+             transform .35s var(--ease),border-color .4s var(--ease),box-shadow .5s var(--ease);
+  box-shadow:0 18px 40px rgba(0,0,0,.45)}
+.minimap:hover .minimap__card{border-color:var(--neon-dim)}
+.minimap.open .minimap__card{width:min(420px,100%);height:320px;
+  box-shadow:0 26px 60px rgba(0,0,0,.55),0 0 40px rgba(130,185,255,.12)}
+
+.minimap__grid{position:absolute;inset:0;opacity:.05;
+  background-image:linear-gradient(var(--neon) 1px,transparent 1px),linear-gradient(90deg,var(--neon) 1px,transparent 1px);
+  background-size:22px 22px;transition:opacity .4s var(--ease)}
+.minimap.open .minimap__grid{opacity:0}
+
+.minimap__streets{position:absolute;inset:0;width:100%;height:100%;opacity:0;
+  transition:opacity .45s var(--ease)}
+.minimap.open .minimap__streets{opacity:1}
+.minimap__streets line{stroke-linecap:square;stroke-dasharray:1;stroke-dashoffset:1;
+  transition:stroke-dashoffset .9s var(--ease-soft)}
+.minimap.open .minimap__streets line{stroke-dashoffset:0}
+.minimap__streets .road{stroke:rgba(234,242,255,.26)}
+.minimap__streets .road--main{stroke:rgba(234,242,255,.34)}
+.minimap__streets .lane{stroke:rgba(234,242,255,.1)}
+.minimap__streets text{font-family:var(--mono);font-size:9px;letter-spacing:.16em;
+  fill:rgba(234,242,255,.42);opacity:0;transition:opacity .4s var(--ease) .5s}
+.minimap.open .minimap__streets text{opacity:1}
+
+.minimap__blocks{position:absolute;inset:0;pointer-events:none}
+.minimap__blocks i{position:absolute;display:block;border-radius:2px;
+  left:var(--x);top:var(--y);width:var(--w);height:var(--h);
+  background:rgba(154,161,170,.16);border:1px solid rgba(154,161,170,.14);
+  opacity:0;transform:scale(.86);
+  transition:opacity .4s var(--ease),transform .4s var(--ease)}
+.minimap.open .minimap__blocks i{opacity:1;transform:none;transition-delay:var(--d,0s)}
+.minimap__blocks i.here{background:rgba(255,59,43,.16);border-color:rgba(255,59,43,.4)}
+
+.minimap__pin{position:absolute;left:50%;top:47%;width:30px;height:30px;margin:-30px 0 0 -15px;
+  opacity:0;transform:translateY(-14px) scale(.6);
+  transition:opacity .35s var(--ease),transform .5s cubic-bezier(.2,1.5,.4,1)}
+.minimap.open .minimap__pin{opacity:1;transform:none;transition-delay:.24s}
+.minimap__pin circle.pulse{transform-origin:12px 9px;animation:pinPulse 2.6s var(--ease-soft) infinite}
+@keyframes pinPulse{0%,100%{opacity:.35;transform:scale(1)}50%{opacity:0;transform:scale(2.4)}}
+
+.minimap__top{position:absolute;left:16px;right:16px;top:14px;display:flex;align-items:center;justify-content:space-between;z-index:4}
+.minimap__icon{width:18px;height:18px;color:var(--accent);opacity:1;transition:opacity .3s var(--ease)}
+.minimap.open .minimap__icon{opacity:0}
+.minimap.open .minimap__chip{opacity:0;pointer-events:none}
+.minimap__chip{transition:opacity .25s var(--ease);display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border-radius:999px;
+  background:rgba(234,242,255,.06);backdrop-filter:blur(8px);
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-secondary);
+  transition:background .3s var(--ease)}
+.minimap:hover .minimap__chip{background:rgba(234,242,255,.1)}
+.minimap__chip i{width:6px;height:6px;border-radius:50%;background:var(--accent);
+  box-shadow:0 0 8px rgba(255,59,43,.8)}
+
+.minimap__bottom{position:absolute;left:16px;right:16px;bottom:14px;z-index:4}
+.minimap__title{font-family:var(--display);font-weight:700;text-transform:uppercase;letter-spacing:.02em;
+  font-size:16px;color:var(--text-primary);transition:transform .4s var(--ease);
+  text-shadow:0 1px 8px rgba(5,8,12,.8)}
+.minimap:hover .minimap__title{transform:translateX(4px)}
+.minimap__coords{font-family:var(--mono);font-size:11px;color:var(--text-secondary);
+  max-height:0;opacity:0;overflow:hidden;transition:max-height .3s var(--ease),opacity .3s var(--ease),margin .3s var(--ease)}
+.minimap.open .minimap__coords{max-height:20px;opacity:1;margin-top:5px}
+.minimap__rule{display:block;height:1px;margin-top:9px;
+  background:linear-gradient(90deg,rgba(255,59,43,.7),rgba(255,59,43,.25),transparent);
+  transform:scaleX(.3);transform-origin:left;transition:transform .45s var(--ease)}
+.minimap:hover .minimap__rule,.minimap.open .minimap__rule{transform:scaleX(1)}
+
+.minimap__toggle{position:absolute;inset:0;z-index:5;border:0;background:transparent;cursor:pointer;padding:0}
+.minimap__link{position:absolute;right:14px;top:12px;z-index:6;
+  font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--text-primary);text-decoration:none;padding:8px 12px;border-radius:2px;
+  background:rgba(10,13,16,.72);border:1px solid var(--neon-dim);backdrop-filter:blur(8px);
+  opacity:0;pointer-events:none;transform:translateY(6px);
+  transition:opacity .3s var(--ease),transform .3s var(--ease),background .3s var(--ease)}
+.minimap.open .minimap__link{opacity:1;pointer-events:auto;transform:none;transition-delay:.3s}
+.minimap__link:hover{background:rgba(255,59,43,.18);border-color:var(--accent)}
+.minimap__hint{display:block;margin-top:10px;font-family:var(--mono);font-size:11px;letter-spacing:.08em;
+  color:var(--text-secondary)}
+@media (pointer:coarse){.minimap__card{width:100%}.minimap{width:100%}}
+
 /* ============================================================
    12. Подвал
    ============================================================ */
@@ -529,6 +619,7 @@ button{font:inherit;color:inherit}
   .checks li{transform:none}
   .price.on{background:linear-gradient(90deg,rgba(30,35,42,.92),rgba(22,26,31,0) 78%)}
   .sparks{display:none}
+  .minimap__card{transform:none}
   .wire .wire__lit{stroke-dashoffset:0}
 }
 body.paused *,body.paused *::before,body.paused *::after{animation-play-state:paused!important}
@@ -881,7 +972,63 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
               Позвонить
             </a>
             <!-- Кнопка MAX добавляется сюда, когда владелец пришлёт свою ссылку вида max.ru/u/... -->
-            <a class="btn btn--ghost" href="https://yandex.ru/maps/?text=Тверь%2C%20улица%20Вагжанова%2C%2011к2" target="_blank" rel="noopener">Открыть на карте</a>
+          </div>
+
+          <div class="minimap" id="minimap">
+            <div class="minimap__card">
+              <span class="minimap__grid" aria-hidden="true"></span>
+
+              <svg class="minimap__streets" viewBox="0 0 420 320" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                <line class="road road--main" pathLength="1" x1="0" y1="205" x2="420" y2="205" stroke-width="13" style="transition-delay:.05s"></line>
+                <line class="road" pathLength="1" x1="0" y1="92" x2="420" y2="92" stroke-width="9" style="transition-delay:.12s"></line>
+                <line class="road" pathLength="1" x1="126" y1="0" x2="126" y2="320" stroke-width="9" style="transition-delay:.2s"></line>
+                <line class="road" pathLength="1" x1="312" y1="0" x2="312" y2="320" stroke-width="7" style="transition-delay:.28s"></line>
+                <line class="lane" pathLength="1" x1="0" y1="150" x2="420" y2="150" stroke-width="2" style="transition-delay:.34s"></line>
+                <line class="lane" pathLength="1" x1="0" y1="268" x2="420" y2="268" stroke-width="2" style="transition-delay:.4s"></line>
+                <line class="lane" pathLength="1" x1="60" y1="0" x2="60" y2="320" stroke-width="2" style="transition-delay:.46s"></line>
+                <line class="lane" pathLength="1" x1="220" y1="92" x2="220" y2="320" stroke-width="2" style="transition-delay:.52s"></line>
+                <line class="lane" pathLength="1" x1="380" y1="0" x2="380" y2="205" stroke-width="2" style="transition-delay:.58s"></line>
+                <text x="14" y="200">УЛ. ВАГЖАНОВА</text>
+                <text x="132" y="86">11К2</text>
+              </svg>
+
+              <span class="minimap__blocks" aria-hidden="true">
+          <i class="" style="--x:6%;--y:14%;--w:18%;--h:16%;--d:0.30s"></i>
+          <i class="" style="--x:30%;--y:8%;--w:14%;--h:12%;--d:0.36s"></i>
+          <i class="" style="--x:62%;--y:16%;--w:20%;--h:14%;--d:0.42s"></i>
+          <i class="" style="--x:8%;--y:62%;--w:16%;--h:20%;--d:0.48s"></i>
+          <i class="" style="--x:70%;--y:64%;--w:22%;--h:22%;--d:0.54s"></i>
+          <i class="here" style="--x:40%;--y:40%;--w:16%;--h:14%;--d:0.20s"></i>
+              </span>
+
+              <svg class="minimap__pin" viewBox="0 0 24 24" aria-hidden="true">
+                <circle class="pulse" cx="12" cy="9" r="5" fill="#FF3B2B"></circle>
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#FF3B2B"></path>
+                <circle cx="12" cy="9" r="2.6" fill="#0D0F12"></circle>
+              </svg>
+
+              <div class="minimap__top">
+                <svg class="minimap__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon>
+                  <line x1="9" x2="9" y1="3" y2="18"></line>
+                  <line x1="15" x2="15" y1="6" y2="21"></line>
+                </svg>
+                <span class="minimap__chip"><i aria-hidden="true"></i>Мы здесь</span>
+              </div>
+
+              <div class="minimap__bottom">
+                <p class="minimap__title">Тверь, Вагжанова 11к2</p>
+                <p class="minimap__coords">56.8529 с. ш., 35.9333 в. д.</p>
+                <span class="minimap__rule" aria-hidden="true"></span>
+              </div>
+
+              <button class="minimap__toggle" type="button" aria-expanded="false" aria-controls="minimap">
+                <span class="sr-only">Развернуть карту проезда</span>
+              </button>
+              <a class="minimap__link" href="https://yandex.ru/maps/?text=%D0%A2%D0%B2%D0%B5%D1%80%D1%8C%2C%20%D1%83%D0%BB%D0%B8%D1%86%D0%B0%20%D0%92%D0%B0%D0%B3%D0%B6%D0%B0%D0%BD%D0%BE%D0%B2%D0%B0%2C%2011%D0%BA2" target="_blank" rel="noopener" tabindex="-1">Открыть в Яндекс Картах</a>
+            </div>
+            <span class="minimap__hint" id="minimap-hint">Нажмите на карту, чтобы развернуть</span>
           </div>
         </div>
 
@@ -907,7 +1054,7 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
 
 <footer class="foot">
   <div class="wrap foot__grid">
-    <p>АвтоБатя, автомастерская. Тверь, улица Вагжанова, 11к2</p>
+    <p>АвтоБатя. Тверь, улица Вагжанова, 11к2</p>
     <p>Пн-Пт 9:00 до 20:00, Сб-Вс по записи</p>
     <p><a href="tel:+79040172588">+7 904 017-25-88</a></p>
   </div>
