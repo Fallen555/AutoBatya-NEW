@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Пульт чата, АвтоБатя</title>
+<meta name="theme-color" content="#0D0F12">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><path d='M32 3.5 56 17v30L32 60.5 8 47V17z' fill='%230D0F12' stroke='%2339414A' stroke-width='2'/><rect x='17' y='15' width='30' height='4.6' rx='2.3' fill='%23EAF2FF'/><path d='M20.5 47 32 24l11.5 23h-7l-4.5-9.6L27.5 47z' fill='%23EDEFF2'/><rect x='25.5' y='37.5' width='13' height='4.2' rx='2.1' fill='%23FF3B2B'/></svg>">
+<style>
+@font-face{font-family:'Oswald';font-weight:700;font-display:swap;src:url('assets/fonts/oswald-700.woff2') format('woff2')}
+@font-face{font-family:'Golos Text';font-weight:400;font-display:swap;src:url('assets/fonts/golos-text-400.woff2') format('woff2')}
+@font-face{font-family:'JetBrains Mono';font-weight:400;font-display:swap;src:url('assets/fonts/jetbrains-mono-400.woff2') format('woff2')}
+:root{
+  --canvas:#0D0F12;--panel:#161A1F;--panel-2:#1E232A;--line:#2A3038;
+  --accent:#FF3B2B;--text:#EDEFF2;--dim:#9AA1AA;
+  --display:'Oswald',sans-serif;--body:'Golos Text',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--canvas);color:var(--text);font-family:var(--body);font-size:16px;height:100vh;overflow:hidden}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.gate{height:100vh;display:grid;place-items:center;padding:24px}
+.gate form{width:min(360px,100%);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:26px}
+.gate h1{font-family:var(--display);font-size:26px;text-transform:uppercase;letter-spacing:.05em;margin:0 0 6px}
+.gate p{margin:0 0 18px;color:var(--dim);font-size:14px}
+.gate input{width:100%;padding:12px 14px;border-radius:6px;border:1px solid var(--line);background:#0F1318;margin-bottom:12px}
+.gate button{width:100%;padding:13px;border:0;border-radius:4px;background:var(--accent);color:#0D0F12;
+  font-family:var(--mono);font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-size:13px;cursor:pointer}
+.gate .err{color:#FF5A4B;font-size:14px;min-height:20px;margin:8px 0 0}
+
+.app{display:none;grid-template-columns:320px 1fr;height:100vh}
+.app.on{display:grid}
+.side{border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;background:#101318}
+.side__head{padding:16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.side__head h1{font-family:var(--display);font-size:19px;text-transform:uppercase;letter-spacing:.05em;margin:0}
+.side__head span{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--dim)}
+.list{flex:1 1 auto;overflow-y:auto}
+.row{width:100%;text-align:left;background:transparent;border:0;border-bottom:1px solid var(--line);
+  padding:14px 16px;cursor:pointer;display:block}
+.row:hover{background:#141920}
+.row.sel{background:#1A2029;box-shadow:inset 2px 0 0 var(--accent)}
+.row b{display:block;font-weight:400;font-size:15px;margin-bottom:3px}
+.row small{color:var(--dim);font-size:13px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row i{float:right;font-style:normal;font-family:var(--mono);font-size:10px;color:var(--dim)}
+.row .dot{display:inline-block;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--accent);
+  color:#0D0F12;font-family:var(--mono);font-size:11px;font-weight:700;text-align:center;line-height:18px;margin-left:6px}
+
+.main{display:flex;flex-direction:column;min-height:0}
+.main__head{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:12px}
+.main__head b{font-family:var(--display);font-size:18px;text-transform:uppercase;letter-spacing:.04em;font-weight:700}
+.main__head span{font-family:var(--mono);font-size:12px;color:var(--dim)}
+.log{flex:1 1 auto;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:70%;padding:10px 13px;border-radius:10px;font-size:15px;line-height:1.45;word-wrap:break-word;white-space:pre-wrap}
+.msg--user{align-self:flex-start;background:var(--panel-2);border:1px solid var(--line);border-bottom-left-radius:3px}
+.msg--shop{align-self:flex-end;background:#3A2320;border:1px solid rgba(255,90,75,.35);border-bottom-right-radius:3px}
+.msg time{display:block;margin-top:5px;font-family:var(--mono);font-size:10px;color:var(--dim)}
+.files{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.files img{width:150px;height:110px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
+.files a{text-decoration:none}
+.files .doc{display:inline-block;padding:7px 10px;border-radius:6px;background:rgba(234,242,255,.07);
+  border:1px solid var(--line);font-size:13px;color:var(--text)}
+.empty{margin:auto;color:var(--dim);font-size:15px}
+
+.composer{border-top:1px solid var(--line);padding:12px 16px;background:#0F1318}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:8px}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:6px 8px 6px 10px;border-radius:6px;
+  background:rgba(234,242,255,.07);border:1px solid var(--line);font-size:12px;color:var(--dim)}
+.chip button{border:0;background:transparent;cursor:pointer;font-size:15px;line-height:1}
+.crow{display:flex;gap:8px;align-items:flex-end}
+.crow textarea{flex:1 1 auto;resize:none;max-height:140px;padding:10px 12px;border-radius:8px;
+  border:1px solid var(--line);background:#131820;font-size:15px;line-height:1.4}
+.crow textarea:focus{outline:none;border-color:rgba(234,242,255,.42)}
+.icon{width:38px;height:38px;border:0;border-radius:6px;background:transparent;color:var(--dim);cursor:pointer;font-size:19px}
+.icon:hover{color:var(--text);background:rgba(234,242,255,.07)}
+.go{padding:0 20px;height:38px;border:0;border-radius:8px;background:var(--accent);color:#0D0F12;cursor:pointer;
+  font-family:var(--mono);font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+.go:disabled{opacity:.5;cursor:default}
+.note{font-size:12px;color:var(--dim);margin:8px 0 0;min-height:16px}
+.note.err{color:#FF5A4B}
+
+@media (max-width:860px){
+  .app.on{grid-template-columns:1fr}
+  .side{display:none}
+  .app.thread .side{display:none}
+  .app:not(.thread) .main{display:none}
+  .app:not(.thread) .side{display:flex}
+  .back{display:inline-block}
+}
+.back{display:none;border:0;background:transparent;color:var(--dim);cursor:pointer;font-size:14px;padding:0 4px 0 0}
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <form id="gate-form">
+    <h1>Пульт чата</h1>
+    <p>Страница для мастерской. Введите пароль, который задан в настройках функции.</p>
+    <input id="pass" type="password" autocomplete="current-password" placeholder="Пароль" required>
+    <button type="submit">Войти</button>
+    <p class="err" id="gate-err"></p>
+  </form>
+</div>
+
+<div class="app" id="app">
+  <aside class="side">
+    <div class="side__head">
+      <h1>Диалоги</h1>
+      <span id="side-count"></span>
+    </div>
+    <div class="list" id="list"></div>
+  </aside>
+
+  <section class="main">
+    <div class="main__head">
+      <button class="back" id="back" type="button">Назад</button>
+      <b id="who">Выберите диалог</b>
+      <span id="whoContact"></span>
+    </div>
+    <div class="log" id="log"><p class="empty">Слева список тех, кто написал с сайта.</p></div>
+    <div class="composer">
+      <div class="chips" id="chips"></div>
+      <div class="crow">
+        <button class="icon" id="fileBtn" type="button" aria-label="Прикрепить файл">📎</button>
+        <input type="file" id="file" multiple hidden accept="image/*,application/pdf,video/mp4,video/quicktime">
+        <textarea id="text" rows="1" placeholder="Ответ клиенту" maxlength="2000"></textarea>
+        <button class="go" id="go" type="button" disabled>Отправить</button>
+      </div>
+      <p class="note" id="note"></p>
+    </div>
+  </section>
+</div>
+
+<script src="assets/chat-config.js"></script>
+<script>
+(function () {
+  'use strict';
+  var API = ((window.AUTOBATYA_CHAT || {}).endpoint || '').replace(/\/+$/, '');
+  var $ = function (id) { return document.getElementById(id); };
+  var pass = '';
+  var cur = null, lastId = 0, pending = [], seen = {}, timers = [];
+
+  function api(action, data) {
+    return fetch(API, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(Object.assign({ action: action, password: pass }, data || {}))
+    }).then(function (r) { return r.json().catch(function () { return { ok: false, error: 'Сервер не ответил' }; }); });
+  }
+  function two(n) { return n < 10 ? '0' + n : '' + n; }
+  function when(iso) {
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    var now = new Date();
+    var sameDay = d.toDateString() === now.toDateString();
+    return sameDay ? two(d.getHours()) + ':' + two(d.getMinutes())
+                   : two(d.getDate()) + '.' + two(d.getMonth() + 1) + ' ' + two(d.getHours()) + ':' + two(d.getMinutes());
+  }
+  function note(t, err) { $('note').textContent = t || ''; $('note').classList.toggle('err', !!err); }
+
+  /* ---------- вход ---------- */
+  $('gate-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!API) { $('gate-err').textContent = 'Чат ещё не настроен: пустой адрес функции в assets/chat-config.js'; return; }
+    pass = $('pass').value;
+    $('gate-err').textContent = 'Проверяю...';
+    api('shop-list').then(function (r) {
+      if (!r.ok) { $('gate-err').textContent = r.error || 'Не пускает'; pass = ''; return; }
+      try { sessionStorage.setItem('ab-pult', pass); } catch (e2) {}
+      $('gate').style.display = 'none';
+      $('app').classList.add('on');
+      drawList(r.chats || []);
+      timers.push(setInterval(refreshList, 10000));
+      timers.push(setInterval(function () { if (cur) loadThread(cur, true); }, 5000));
+    }, function () { $('gate-err').textContent = 'Нет связи с сервером чата'; });
+  });
+
+  try {
+    var saved = sessionStorage.getItem('ab-pult');
+    if (saved) { $('pass').value = saved; $('gate-form').dispatchEvent(new Event('submit')); }
+  } catch (e) {}
+
+  /* ---------- список ---------- */
+  function refreshList() { api('shop-list').then(function (r) { if (r.ok) drawList(r.chats || []); }); }
+
+  function drawList(chats) {
+    var list = $('list');
+    list.textContent = '';
+    $('side-count').textContent = chats.length ? chats.length + ' всего' : '';
+    if (!chats.length) {
+      var p = document.createElement('p');
+      p.className = 'empty';
+      p.style.padding = '18px';
+      p.textContent = 'Пока никто не писал.';
+      list.appendChild(p);
+      return;
+    }
+    chats.forEach(function (c) {
+      var b = document.createElement('button');
+      b.className = 'row' + (cur === c.id ? ' sel' : '');
+      b.type = 'button';
+      var i = document.createElement('i');
+      i.textContent = when(c.last_message_at);
+      b.appendChild(i);
+      var title = document.createElement('b');
+      title.textContent = c.contact || c.name || ('Гость ' + String(c.id).slice(0, 6));
+      if (c.unread_for_shop > 0) {
+        var d = document.createElement('span');
+        d.className = 'dot';
+        d.textContent = c.unread_for_shop;
+        title.appendChild(d);
+      }
+      b.appendChild(title);
+      var s = document.createElement('small');
+      s.textContent = (c.previewAuthor === 'shop' ? 'Вы: ' : '') + (c.preview || 'без текста');
+      b.appendChild(s);
+      b.addEventListener('click', function () { openThread(c); });
+      list.appendChild(b);
+    });
+  }
+
+  /* ---------- переписка ---------- */
+  function openThread(c) {
+    cur = c.id; lastId = 0; seen = {}; pending = []; drawChips();
+    $('who').textContent = c.contact || c.name || ('Гость ' + String(c.id).slice(0, 6));
+    $('whoContact').textContent = c.name && c.contact ? c.name : '';
+    $('log').textContent = '';
+    $('go').disabled = false;
+    $('app').classList.add('thread');
+    refreshList();
+    loadThread(cur, true);
+  }
+
+  function loadThread(id, markRead) {
+    return api('shop-poll', { chatId: id, since: lastId, read: !!markRead }).then(function (r) {
+      if (!r.ok || id !== cur) return;
+      var log = $('log');
+      var atBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 60;
+      (r.messages || []).forEach(function (m) {
+        if (seen[m.id]) return;
+        seen[m.id] = true;
+        if (m.id > lastId) lastId = m.id;
+        var box = document.createElement('div');
+        box.className = 'msg msg--' + (m.author === 'shop' ? 'shop' : 'user');
+        if (m.body) box.appendChild(document.createTextNode(m.body));
+        if (m.files && m.files.length) {
+          var wrap = document.createElement('div');
+          wrap.className = 'files';
+          m.files.forEach(function (f) {
+            var a = document.createElement('a');
+            a.href = f.url || '#'; a.target = '_blank'; a.rel = 'noopener';
+            if (/^image\//.test(f.type || '') && f.url) {
+              var img = document.createElement('img');
+              img.src = f.url; img.alt = f.name || ''; img.loading = 'lazy';
+              a.appendChild(img);
+            } else {
+              var d = document.createElement('span');
+              d.className = 'doc'; d.textContent = f.name || 'Файл';
+              a.appendChild(d);
+            }
+            wrap.appendChild(a);
+          });
+          box.appendChild(wrap);
+        }
+        var t = document.createElement('time');
+        t.textContent = when(m.created_at);
+        box.appendChild(t);
+        log.appendChild(box);
+      });
+      if (atBottom) log.scrollTop = log.scrollHeight;
+    });
+  }
+
+  $('back').addEventListener('click', function () { $('app').classList.remove('thread'); });
+
+  /* ---------- файлы ---------- */
+  function human(s) {
+    if (s > 1048576) return (s / 1048576).toFixed(1) + ' МБ';
+    if (s > 1024) return Math.round(s / 1024) + ' КБ';
+    return s + ' Б';
+  }
+  function drawChips() {
+    var box = $('chips');
+    box.textContent = '';
+    pending.forEach(function (f, i) {
+      var c = document.createElement('span');
+      c.className = 'chip';
+      c.appendChild(document.createTextNode(f.name + ' · ' + human(f.size)));
+      var x = document.createElement('button');
+      x.type = 'button'; x.textContent = '×';
+      x.addEventListener('click', function () { pending.splice(i, 1); drawChips(); });
+      c.appendChild(x);
+      box.appendChild(c);
+    });
+  }
+  $('fileBtn').addEventListener('click', function () { $('file').click(); });
+  $('file').addEventListener('change', function () {
+    var list = Array.prototype.slice.call($('file').files || []);
+    $('file').value = '';
+    if (!cur || !list.length) return;
+    note('Загружаю...');
+    Promise.all(list.slice(0, 4).map(function (f) {
+      return api('shop-upload-url', { chatId: cur, name: f.name, type: f.type, size: f.size })
+        .then(function (r) {
+          if (!r.ok) { note(r.error || 'Файл не принят', true); return null; }
+          return fetch(r.uploadUrl, { method: 'PUT', headers: f.type ? { 'content-type': f.type } : {}, body: f })
+            .then(function (up) { return up.ok ? { path: r.path, name: f.name, size: f.size, type: f.type } : null; });
+        });
+    })).then(function (done) {
+      done.filter(Boolean).forEach(function (f) { pending.push(f); });
+      drawChips();
+      note('');
+    });
+  });
+
+  /* ---------- отправка ---------- */
+  function grow() { var t = $('text'); t.style.height = 'auto'; t.style.height = Math.min(140, t.scrollHeight) + 'px'; }
+  $('text').addEventListener('input', grow);
+  $('text').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  });
+  $('go').addEventListener('click', send);
+
+  function send() {
+    if (!cur) return;
+    var body = $('text').value.trim();
+    if (!body && !pending.length) return;
+    $('go').disabled = true;
+    api('shop-send', { chatId: cur, body: body, files: pending }).then(function (r) {
+      $('go').disabled = false;
+      if (!r.ok) { note(r.error || 'Не отправилось', true); return; }
+      $('text').value = ''; grow();
+      pending = []; drawChips(); note('');
+      loadThread(cur, true).then(refreshList);
+    }, function () { $('go').disabled = false; note('Нет связи', true); });
+  }
+})();
+</script>
+</body>
+</html>
