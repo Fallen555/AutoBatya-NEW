@@ -33,6 +33,14 @@ alter table public.messages enable row level security;
 revoke all on public.chats    from anon, authenticated;
 revoke all on public.messages from anon, authenticated;
 
+-- А служебной роли, из-под которой работает функция, права выдаём явно.
+-- Обычно Supabase выдаёт их сам, но в настройках проекта автоматическую
+-- выдачу можно отключить, и тогда без этих строк функция упрётся в отказ.
+grant usage on schema public to service_role;
+grant all on public.chats    to service_role;
+grant all on public.messages to service_role;
+grant usage, select on sequence public.messages_id_seq to service_role;
+
 -- Хранилище файлов: приватное ведро.
 insert into storage.buckets (id, name, public)
 values ('chat-files', 'chat-files', false)
