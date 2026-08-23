@@ -172,7 +172,7 @@
      ---------------------------------------------------------- */
   var frames = new Array(FRAME_COUNT);
   var loadedCount = 0;
-  var drawnIndex = -1;
+  var drawnKey = -1;
   var canvasW = 0, canvasH = 0;
   var heroReady = false;
 
@@ -190,29 +190,59 @@
     if (!w || !h || (w === canvasW && h === canvasH)) return;
     canvasW = canvas.width = w;
     canvasH = canvas.height = h;
-    drawnIndex = -1;
+    drawnKey = -1;
   }
 
-  function nearestLoaded(want) {
-    if (frames[want]) return want;
-    for (var d = 1; d < FRAME_COUNT; d++) {
-      if (want - d >= 0 && frames[want - d]) return want - d;
-      if (want + d < FRAME_COUNT && frames[want + d]) return want + d;
-    }
-    return -1;
-  }
-
-  function drawFrame(p) {
-    if (!ctx || !canvasW) return;
-    var want = Math.round(clamp(p, 0, 1) * (FRAME_COUNT - 1));
-    var idx = nearestLoaded(want);
-    if (idx < 0 || idx === drawnIndex) return;
-    drawnIndex = idx;
-    var img = frames[idx];
+  function paintImage(img, alpha) {
     var iw = img.naturalWidth, ih = img.naturalHeight;
     var s = Math.max(canvasW / iw, canvasH / ih);
     var dw = iw * s, dh = ih * s;
+    if (alpha < 1) ctx.globalAlpha = alpha;
     ctx.drawImage(img, (canvasW - dw) / 2, (canvasH - dh) / 2, dw, dh);
+    if (alpha < 1) ctx.globalAlpha = 1;
+  }
+
+  function loadedAtOrBelow(i) {
+    for (var d = 0; i - d >= 0; d++) if (frames[i - d]) return i - d;
+    return -1;
+  }
+  function loadedAtOrAbove(i) {
+    for (var d = 0; i + d < FRAME_COUNT; d++) if (frames[i + d]) return i + d;
+    return -1;
+  }
+
+  // Кадров всего 192 на весь ход прокрутки, то есть один кадр держится
+  // два-три десятка пикселей. Чтобы машина не замирала между ними, поверх
+  // нижнего кадра подмешиваем верхний, а долю берём из положения между ними.
+  // Пока кадры ещё догружаются, соседа может не быть: тогда смешиваем через
+  // разрыв, но не длиннее четырёх кадров, иначе выйдет каша вместо движения.
+  var MAX_BLEND_GAP = 4;
+
+  function drawFrame(p) {
+    if (!ctx || !canvasW) return;
+    var t = clamp(p, 0, 1) * (FRAME_COUNT - 1);
+    var lo = loadedAtOrBelow(Math.floor(t));
+    var hi = loadedAtOrAbove(Math.ceil(t));
+    if (lo < 0 && hi < 0) return;
+    if (lo < 0) lo = hi;
+    if (hi < 0) hi = lo;
+
+    var frac = 0;
+    if (hi > lo) {
+      if (hi - lo > MAX_BLEND_GAP) {
+        // разрыв слишком велик: показываем тот кадр, что ближе
+        if (t - lo <= hi - t) hi = lo; else lo = hi;
+      } else {
+        frac = clamp((t - lo) / (hi - lo), 0, 1);
+      }
+    }
+
+    var key = lo * 1e6 + hi * 1e3 + Math.round(frac * 100);
+    if (key === drawnKey) return;
+    drawnKey = key;
+
+    paintImage(frames[lo], 1);
+    if (hi !== lo && frac > 0.004) paintImage(frames[hi], frac);
   }
 
   /* ----------------------------------------------------------
