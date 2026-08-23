@@ -37,6 +37,13 @@ button,input,textarea{font:inherit;color:inherit}
 .side__head h1{font-family:var(--display);font-size:19px;text-transform:uppercase;letter-spacing:.05em;margin:0}
 .side__head span{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--dim)}
 .list{flex:1 1 auto;overflow-y:auto}
+.side__foot{padding:12px 16px;border-top:1px solid var(--line)}
+.side__foot button{width:100%;padding:9px;border:1px solid var(--line);border-radius:4px;background:transparent;
+  color:var(--dim);font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.side__foot button:hover{color:var(--fg);border-color:#39414C}
+.side__foot p{margin:8px 0 0;font-size:12px;line-height:1.45;color:var(--dim);word-break:break-word}
+.side__foot p.ok{color:#57C98A}
+.side__foot p.err{color:#FF5A4B}
 .row{width:100%;text-align:left;background:transparent;border:0;border-bottom:1px solid var(--line);
   padding:14px 16px;cursor:pointer;display:block}
 .row:hover{background:#141920}
@@ -110,6 +117,10 @@ button,input,textarea{font:inherit;color:inherit}
       <span id="side-count"></span>
     </div>
     <div class="list" id="list"></div>
+    <div class="side__foot">
+      <button id="mail-test" type="button">Проверить почту</button>
+      <p id="mail-note"></p>
+    </div>
   </aside>
 
   <section class="main">
@@ -321,6 +332,28 @@ button,input,textarea{font:inherit;color:inherit}
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
   });
   $('go').addEventListener('click', send);
+
+  // Проверка почты: шлём себе письмо и показываем, что ответил сервис рассылки.
+  $('mail-test').addEventListener('click', function () {
+    var btn = $('mail-test'), out = $('mail-note');
+    btn.disabled = true;
+    out.className = '';
+    out.textContent = 'Отправляю...';
+    api('shop-mail-test').then(function (r) {
+      btn.disabled = false;
+      if (r.ok) {
+        out.className = 'ok';
+        out.textContent = 'Письмо ушло. Проверьте почту, в том числе папку «Спам».';
+      } else {
+        out.className = 'err';
+        out.textContent = 'Не ушло. ' + (r.error || ('Ответ сервиса: ' + (r.status || '') + ' ' + (r.answer || '')));
+      }
+    }, function () {
+      btn.disabled = false;
+      out.className = 'err';
+      out.textContent = 'Нет связи с сервером чата.';
+    });
+  });
 
   function send() {
     if (!cur) return;

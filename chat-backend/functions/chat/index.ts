@@ -111,11 +111,35 @@ async function tooFast(chatId: string) {
   return (count ?? 0) > 20;
 }
 
+// Отправка письма через Web3Forms. Возвращает, что именно ответил сервис,
+// чтобы поломку было видно, а не приходилось гадать.
+async function sendMail(subject: string, text: string) {
+  if (!NOTIFY_KEY) return { ok: false, status: 0, answer: "Ключ NOTIFY_KEY не задан" };
+  try {
+    const r = await fetch("https://api.web3forms.com/submit", {
+      method: "POST",
+      headers: { "content-type": "application/json", "accept": "application/json" },
+      body: JSON.stringify({
+        access_key: NOTIFY_KEY,
+        subject,
+        from_name: "Чат на сайте",
+        message: text,
+      }),
+    });
+    const answer = (await r.text()).slice(0, 400);
+    if (!r.ok) console.error("Web3Forms отказал:", r.status, answer);
+    return { ok: r.ok, status: r.status, answer };
+  } catch (e) {
+    const answer = e instanceof Error ? e.message : String(e);
+    console.error("Web3Forms недоступен:", answer);
+    return { ok: false, status: 0, answer };
+  }
+}
+
 async function notifyShop(chat: Record<string, unknown>, body: string, fileCount: number) {
   if (!NOTIFY_KEY) return;
   const last = chat.last_notify_at ? Date.parse(String(chat.last_notify_at)) : 0;
   if (Date.now() - last < 90_000) return;     // не чаще раза в полторы минуты на один диалог
-  await db.from("chats").update({ last_notify_at: new Date().toISOString() }).eq("id", chat.id);
 
   const lines = [
     "Новое сообщение в чате на сайте.",
@@ -126,18 +150,12 @@ async function notifyShop(chat: Record<string, unknown>, body: string, fileCount
     chat.contact ? `\nКонтакт: ${chat.contact}` : "",
     SITE_URL ? `\nОтветить: ${SITE_URL.replace(/\/$/, "")}/pult.html` : "",
   ];
-  try {
-    await fetch("https://api.web3forms.com/submit", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        access_key: NOTIFY_KEY,
-        subject: "АвтоБатя: сообщение в чате на сайте",
-        from_name: "Чат на сайте",
-        message: lines.filter(Boolean).join("\n"),
-      }),
-    });
-  } catch (_) { /* письмо не ушло, чат от этого не ломается */ }
+  const sent = await sendMail("АвтоБатя: сообщение в чате на сайте", lines.filter(Boolean).join("\n"));
+  // Отметку о письме ставим только когда оно правда ушло: иначе неудачная
+  // попытка заглушила бы уведомления на полторы минуты.
+  if (sent.ok) {
+    await db.from("chats").update({ last_notify_at: new Date().toISOString() }).eq("id", chat.id);
+  }
 }
 
 async function uploadTicket(chatId: string, name: unknown, type: unknown, size: unknown) {
@@ -239,6 +257,18 @@ async function handle(req: Request): Promise<Response> {
     // ---------- пульт мастерской ----------
     if (action.startsWith("shop-")) {
       if (!isShop) return fail("Неверный пароль", 403);
+
+      // Проверка почты: шлём письмо прямо сейчас и показываем ответ сервиса.
+      if (action === "shop-mail-test") {
+        if (!NOTIFY_KEY) {
+          return json({ ok: false, error: "Ключ NOTIFY_KEY не задан в настройках функции" });
+        }
+        const sent = await sendMail(
+          "АвтоБатя: проверка почты",
+          "Это проверочное письмо из пульта. Если оно дошло, уведомления о сообщениях с сайта тоже будут доходить.",
+        );
+        return json({ ok: sent.ok, status: sent.status, answer: sent.answer });
+      }
 
       if (action === "shop-list") {
         const { data } = await db.from("chats")
