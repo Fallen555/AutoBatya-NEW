@@ -9,7 +9,14 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const SHOP_PASSWORD = Deno.env.get("SHOP_PASSWORD") ?? "";
 const NOTIFY_KEY = Deno.env.get("NOTIFY_KEY") ?? "";       // ключ Web3Forms, необязательно
 const SITE_URL = Deno.env.get("SITE_URL") ?? "";           // адрес сайта, для ссылки в письме
-const ALLOWED_ORIGIN = Deno.env.get("ALLOWED_ORIGIN") ?? "*";
+// Адреса сайтов, которым разрешено обращаться к чату. Можно перечислить
+// несколько через запятую: пригодится, когда сайт переедет на свой домен,
+// тогда старый и новый адрес работают одновременно.
+// Пример: https://fallen555.github.io, https://avtobatya.ru
+const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGIN") ?? "*")
+  .split(",")
+  .map((s) => s.trim().replace(/\/+$/, ""))
+  .filter(Boolean);
 
 const BUCKET = "chat-files";
 const MAX_TEXT = 2000;
@@ -23,11 +30,20 @@ const ALLOWED_TYPES = [
 const db = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
 const cors = {
-  "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
+  "Access-Control-Allow-Origin": ALLOWED_ORIGINS[0] ?? "*",
   "Access-Control-Allow-Headers": "content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Vary": "Origin",
 };
+
+// Какой адрес разрешить именно этому запросу. Если список из одного адреса,
+// ведёт себя как раньше; если из нескольких, отвечаем тем, с которого пришли.
+function originFor(req: Request) {
+  if (ALLOWED_ORIGINS.includes("*")) return "*";
+  const from = (req.headers.get("origin") ?? "").replace(/\/+$/, "");
+  if (from && ALLOWED_ORIGINS.includes(from)) return from;
+  return ALLOWED_ORIGINS[0] ?? "*";
+}
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -139,7 +155,14 @@ async function uploadTicket(chatId: string, name: unknown, type: unknown, size: 
   return { path, uploadUrl: signedUrl, token: data.token };
 }
 
+// Каждому ответу проставляем тот адрес, с которого пришёл запрос.
 Deno.serve(async (req) => {
+  const res = await handle(req);
+  res.headers.set("Access-Control-Allow-Origin", originFor(req));
+  return res;
+});
+
+async function handle(req: Request): Promise<Response> {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return fail("Только POST", 405);
 
@@ -280,4 +303,4 @@ Deno.serve(async (req) => {
   } catch (_e) {
     return fail("Внутренняя ошибка", 500);
   }
-});
+}
