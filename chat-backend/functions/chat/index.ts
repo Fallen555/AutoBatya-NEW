@@ -6,14 +6,19 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const SHOP_PASSWORD = Deno.env.get("SHOP_PASSWORD") ?? "";
-const NOTIFY_KEY = Deno.env.get("NOTIFY_KEY") ?? "";       // ключ Web3Forms, необязательно
-const SITE_URL = Deno.env.get("SITE_URL") ?? "";           // адрес сайта, для ссылки в письме
+// Значения из настроек чистим от пробелов и переводов строки: поле для секрета
+// в Supabase многострочное, и лишний невидимый символ легко уезжает вместе
+// с паролем или ключом.
+const env = (name: string) => (Deno.env.get(name) ?? "").trim();
+
+const SHOP_PASSWORD = env("SHOP_PASSWORD");
+const NOTIFY_KEY = env("NOTIFY_KEY");                      // ключ Web3Forms, необязательно
+const SITE_URL = env("SITE_URL");                          // адрес сайта, для ссылки в письме
 // Адреса сайтов, которым разрешено обращаться к чату. Можно перечислить
 // несколько через запятую: пригодится, когда сайт переедет на свой домен,
 // тогда старый и новый адрес работают одновременно.
 // Пример: https://fallen555.github.io, https://avtobatya.ru
-const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGIN") ?? "*")
+const ALLOWED_ORIGINS = (env("ALLOWED_ORIGIN") || "*")
   .split(",")
   .map((s) => s.trim().replace(/\/+$/, ""))
   .filter(Boolean);
@@ -187,12 +192,20 @@ async function handle(req: Request): Promise<Response> {
   let payload: Record<string, unknown>;
   try { payload = await req.json(); } catch { return fail("Плохой запрос"); }
   const action = String(payload.action ?? "");
-  const isShop = SHOP_PASSWORD.length > 0 && sameSecret(String(payload.password ?? ""), SHOP_PASSWORD);
+  // Пароль из пульта тоже чистим по краям: браузеры любят подставлять пробел.
+  const isShop = SHOP_PASSWORD.length > 0 &&
+    sameSecret(String(payload.password ?? "").trim(), SHOP_PASSWORD);
 
   try {
     // ---------- проверка связи ----------
     if (action === "ping") {
-      return json({ ok: true, ready: true, notify: NOTIFY_KEY.length > 0, shop: isShop });
+      return json({
+        ok: true,
+        ready: true,
+        notify: NOTIFY_KEY.length > 0,
+        password: SHOP_PASSWORD.length > 0,   // задан ли пароль пульта на сервере
+        shop: isShop,
+      });
     }
 
     // ---------- посетитель ----------
@@ -256,6 +269,10 @@ async function handle(req: Request): Promise<Response> {
 
     // ---------- пульт мастерской ----------
     if (action.startsWith("shop-")) {
+      // Разделяем два разных случая, иначе непонятно, что чинить.
+      if (!SHOP_PASSWORD) {
+        return fail("На сервере не задан пароль. Добавьте SHOP_PASSWORD в Secrets и опубликуйте функцию заново", 403);
+      }
       if (!isShop) return fail("Неверный пароль", 403);
 
       // Проверка почты: шлём письмо прямо сейчас и показываем ответ сервиса.
