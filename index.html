@@ -552,8 +552,10 @@ button{font:inherit;color:inherit}
   transition:opacity .3s var(--ease),transform .3s var(--ease),background .3s var(--ease)}
 .minimap.open .minimap__link{opacity:1;pointer-events:auto;transform:none;transition-delay:.3s}
 .minimap__link:hover{background:rgba(255,59,43,.18);border-color:var(--accent)}
-.minimap__hint{display:block;margin-top:10px;font-family:var(--mono);font-size:11px;letter-spacing:.08em;
-  color:var(--text-secondary)}
+/* подпись мелкая и моноширинная, поэтому берём цвет ярче обычного
+   второстепенного текста: иначе тонкие штрихи тонут в тёмном фоне */
+.minimap__hint{display:block;margin-top:10px;font-family:var(--mono);font-size:12px;letter-spacing:.08em;
+  color:#C6CDD6}
 @media (pointer:coarse){.minimap__card{width:100%}.minimap{width:100%}}
 
 /* ============================================================
