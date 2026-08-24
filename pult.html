@@ -310,8 +310,10 @@ button,input,textarea{font:inherit;color:inherit}
     var list = Array.prototype.slice.call($('file').files || []);
     $('file').value = '';
     if (!cur || !list.length) return;
+    var big = list.filter(function (f) { return f.size > 25 * 1024 * 1024; });
+    if (big.length) { note('Файл ' + big[0].name + ' больше 25 МБ', true); return; }
     note('Загружаю...');
-    Promise.all(list.slice(0, 4).map(function (f) {
+    Promise.all(list.slice(0, 6).map(function (f) {
       return api('shop-upload-url', { chatId: cur, name: f.name, type: f.type, size: f.size })
         .then(function (r) {
           if (!r.ok) { note(r.error || 'Файл не принят', true); return null; }

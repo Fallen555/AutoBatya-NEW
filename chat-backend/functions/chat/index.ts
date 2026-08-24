@@ -25,8 +25,8 @@ const ALLOWED_ORIGINS = (env("ALLOWED_ORIGIN") || "*")
 
 const BUCKET = "chat-files";
 const MAX_TEXT = 2000;
-const MAX_FILES = 4;
-const MAX_FILE_BYTES = 10 * 1024 * 1024;
+const MAX_FILES = 6;
+const MAX_FILE_BYTES = 25 * 1024 * 1024;
 const ALLOWED_TYPES = [
   "image/jpeg", "image/png", "image/webp", "image/gif", "image/heic",
   "application/pdf", "video/mp4", "video/quicktime",
@@ -167,7 +167,7 @@ async function uploadTicket(chatId: string, name: unknown, type: unknown, size: 
   const fileName = String(name ?? "file").replace(/[^\w.\-а-яёА-ЯЁ ]+/gi, "_").slice(0, 120);
   const fileType = String(type ?? "");
   const fileSize = Number(size) || 0;
-  if (fileSize > MAX_FILE_BYTES) return { error: "Файл больше 10 МБ" };
+  if (fileSize > MAX_FILE_BYTES) return { error: "Файл больше 25 МБ" };
   if (fileType && !ALLOWED_TYPES.includes(fileType)) return { error: "Такой тип файла не принимаем" };
   const path = `${chatId}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}-${fileName}`;
   const { data, error } = await db.storage.from(BUCKET).createSignedUploadUrl(path);

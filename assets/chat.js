@@ -5,6 +5,11 @@
 
   var CFG = window.AUTOBATYA_CHAT || {};
   var API = (CFG.endpoint || '').replace(/\/+$/, '');
+
+  // Те же пределы стоят на сервере, здесь они только чтобы предупредить
+  // клиента до отправки, а не после впустую потраченной минуты.
+  var MAX_FILES = 6;
+  var MAX_FILE_BYTES = 25 * 1024 * 1024;
   var root = document.getElementById('chat');
   if (!API || !root) return;                 // не настроено, кнопку не показываем
 
@@ -244,7 +249,34 @@
     });
   }
 
-  function uploadOne(file) {
+  // Подпись без самоочистки: пока идёт загрузка, она должна висеть.
+  function noteSticky(text) {
+    els.note.textContent = text;
+    els.note.classList.remove('err');
+  }
+
+  // Отправляем через XMLHttpRequest, а не fetch, только ради одного:
+  // он умеет докладывать, сколько байтов уже ушло.
+  function putWithProgress(url, file, onSent) {
+    return new Promise(function (resolve) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('PUT', url, true);
+      if (file.type) xhr.setRequestHeader('content-type', file.type);
+      if (xhr.upload) {
+        xhr.upload.onprogress = function (e) {
+          if (e.lengthComputable) onSent(e.loaded);
+        };
+      }
+      xhr.onload = function () {
+        onSent(file.size);
+        resolve(xhr.status >= 200 && xhr.status < 300);
+      };
+      xhr.onerror = function () { resolve(false); };
+      xhr.send(file);
+    });
+  }
+
+  function uploadOne(file, onSent) {
     return ensureChat().then(function (ok) {
       if (!ok) return null;
       return api('upload-url', {
@@ -253,12 +285,8 @@
       });
     }).then(function (r) {
       if (!r || !r.ok) { note((r && r.error) || 'Файл не принят', true); return null; }
-      return fetch(r.uploadUrl, {
-        method: 'PUT',
-        headers: file.type ? { 'content-type': file.type } : {},
-        body: file
-      }).then(function (up) {
-        if (!up.ok) { note('Файл не загрузился', true); return null; }
+      return putWithProgress(r.uploadUrl, file, onSent).then(function (up) {
+        if (!up) { note('Файл не загрузился', true); return null; }
         return { path: r.path, name: file.name, size: file.size, type: file.type };
       });
     });
@@ -269,11 +297,28 @@
     var list = Array.prototype.slice.call(els.file.files || []);
     els.file.value = '';
     if (!list.length) return;
-    if (state.pending.length + list.length > 4) { note('Не больше четырёх файлов за раз', true); return; }
-    note('Загружаю файлы...');
-    var jobs = list.map(function (f) {
-      if (f.size > 10 * 1024 * 1024) { note('Файл ' + f.name + ' больше 10 МБ', true); return Promise.resolve(null); }
-      return uploadOne(f);
+    if (state.pending.length + list.length > MAX_FILES) {
+      note('Не больше шести файлов за раз', true); return;
+    }
+    var take = list.filter(function (f) {
+      if (f.size > MAX_FILE_BYTES) { note('Файл ' + f.name + ' больше 25 МБ', true); return false; }
+      return true;
+    });
+    if (!take.length) return;
+
+    // Показываем ход загрузки: на телефоне большой файл идёт минуту,
+    // и без этого кажется, что чат завис.
+    var total = take.reduce(function (s, f) { return s + f.size; }, 0);
+    var sent = take.map(function () { return 0; });
+    function showProgress() {
+      var done = sent.reduce(function (a, b) { return a + b; }, 0);
+      var pct = total ? Math.min(100, Math.round(done / total * 100)) : 100;
+      noteSticky(pct < 100 ? 'Отправляю файлы, ' + pct + '%. Не закрывайте окно' : 'Файлы отправлены');
+    }
+    showProgress();
+
+    var jobs = take.map(function (f, i) {
+      return uploadOne(f, function (bytes) { sent[i] = bytes; showProgress(); });
     });
     Promise.all(jobs).then(function (done) {
       done.filter(Boolean).forEach(function (f) { state.pending.push(f); });
