@@ -382,7 +382,9 @@
     state.busy = true;
     els.send.disabled = true;
     ensureChat().then(function (ok) {
-      if (!ok) throw new Error('нет диалога');
+      // Диалог не открылся, причину уже написали в подписи под полем.
+      // Помечаем ошибку, чтобы общий обработчик её не затёр.
+      if (!ok) { var stop = new Error('нет диалога'); stop.quiet = true; throw stop; }
       return api('send', {
         chatId: state.id, secret: state.secret,
         body: text, files: files,
@@ -397,8 +399,8 @@
       els.contact.hidden = true;
       note('');
       return poll(true).then(scrollDown);
-    }).catch(function () {
-      note('Нет связи, попробуйте ещё раз', true);
+    }).catch(function (e) {
+      if (!(e && e.quiet)) note('Нет связи, попробуйте ещё раз', true);
     }).then(function () {
       state.busy = false;
       els.send.disabled = false;
