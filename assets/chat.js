@@ -37,7 +37,8 @@
   var state = {
     id: null, secret: null, lastId: 0,
     open: false, busy: false, unread: 0,
-    pending: [], starting: null, timer: null, seen: {}
+    pending: [], starting: null, timer: null, seen: {},
+    netFails: 0, offlineShown: false
   };
 
   try {
@@ -75,6 +76,7 @@
         signal: ctl ? ctl.signal : undefined
       }).then(function (r) {
         clearTimeout(timer);
+        state.netFails = 0;
         if (!r.ok) lastNetError = 'ответ ' + r.status;
         return r.json().catch(function () {
           lastNetError = 'ответ ' + r.status + ', не разобрать';
@@ -84,6 +86,7 @@
         clearTimeout(timer);
         lastNetError = (e && e.message) ? String(e.message).slice(0, 80) : 'запрос не ушёл';
         if (n < retries) return wait(700 * (n + 1)).then(function () { return attempt(n + 1); });
+        state.netFails++;
         throw e;
       });
     }
@@ -115,7 +118,8 @@
       return true;
     }, function () {
       state.starting = null;
-      note('Чат не отвечает' + (lastNetError ? ': ' + lastNetError : ''), true);
+      if (state.netFails >= 2) showOffline();
+      else note('Чат не отвечает' + (lastNetError ? ': ' + lastNetError : ''), true);
       return false;
     });
     return state.starting;
@@ -183,6 +187,23 @@
   }
 
   function scrollDown() { els.log.scrollTop = els.log.scrollHeight; }
+
+  // Если сервер чата не отвечает подряд, клиент не должен упираться в красную
+  // надпись. Показываем спокойное объяснение и телефон: звонок работает всегда.
+  function showOffline() {
+    if (state.offlineShown) return;
+    state.offlineShown = true;
+    var box = document.createElement('p');
+    box.className = 'chat__hello chat__hello--warn';
+    box.appendChild(document.createTextNode(
+      'Чат сейчас не отвечает: у части операторов связи бывают перебои. Позвоните, ответим сразу: '));
+    var a = document.createElement('a');
+    a.href = 'tel:+79040172588';
+    a.textContent = '+7 904 017-25-88';
+    box.appendChild(a);
+    els.log.appendChild(box);
+    scrollDown();
+  }
 
   function note(text, isError) {
     els.note.textContent = text || '';
@@ -467,6 +488,9 @@
           els.contact.hidden = true;
           note('');
           scrollDown();
+        } else if (state.netFails >= 2) {
+          note('');
+          showOffline();
         } else {
           note('Не отправилось' + (lastNetError ? ': ' + lastNetError : '') + '. Попробуйте ещё раз', true);
         }
