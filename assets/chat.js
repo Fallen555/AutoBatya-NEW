@@ -49,6 +49,10 @@
   root.classList.add('on');
 
   /* ---------------- сеть ---------------- */
+  // Последняя техническая причина сбоя связи. Нужна, чтобы подпись под полем
+  // говорила, что именно произошло, а не общее "нет связи".
+  var lastNetError = '';
+
   function api(action, data) {
     var body = Object.assign({ action: action }, data || {});
     return fetch(API, {
@@ -56,7 +60,14 @@
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(body)
     }).then(function (r) {
-      return r.json().catch(function () { return { ok: false, error: 'Сервер не ответил' }; });
+      if (!r.ok) lastNetError = 'ответ ' + r.status;
+      return r.json().catch(function () {
+        lastNetError = 'ответ ' + r.status + ', не разобрать';
+        return { ok: false, error: 'Сервер не ответил' };
+      });
+    }, function (e) {
+      lastNetError = (e && e.message) ? String(e.message).slice(0, 80) : 'запрос не ушёл';
+      throw e;
     });
   }
 
@@ -76,7 +87,11 @@
       state.id = r.chatId; state.secret = r.secret; state.lastId = 0;
       remember();
       return true;
-    }, function () { state.starting = null; note('Нет связи с чатом', true); return false; });
+    }, function () {
+      state.starting = null;
+      note('Чат не отвечает' + (lastNetError ? ': ' + lastNetError : ''), true);
+      return false;
+    });
     return state.starting;
   }
 
@@ -400,7 +415,9 @@
       note('');
       return poll(true).then(scrollDown);
     }).catch(function (e) {
-      if (!(e && e.quiet)) note('Нет связи, попробуйте ещё раз', true);
+      if (!(e && e.quiet)) {
+        note('Не отправилось' + (lastNetError ? ': ' + lastNetError : '') + '. Попробуйте ещё раз', true);
+      }
     }).then(function () {
       state.busy = false;
       els.send.disabled = false;
