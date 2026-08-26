@@ -597,45 +597,48 @@ button{font:inherit;color:inherit}
 .step.in .step__dot{border-color:var(--accent);box-shadow:0 0 0 5px var(--accent-muted)}
 
 /* ============================================================
-   10. Живой момент: свет в боксе
+   10. Живой момент: неоновая вывеска
    ============================================================ */
 .light{position:relative;overflow:hidden;background:var(--canvas-deep);
-  padding:clamp(88px,13vh,150px) 0}
-.light__img{position:absolute;inset:0;background-image:url('assets/still-side.jpg');background-size:cover;background-position:50% 54%;
-  opacity:calc(.1 + .9*var(--lit,0))}
-.light__veil{position:absolute;inset:0;background:linear-gradient(to right,rgba(8,10,12,.95) 0%,rgba(8,10,12,.7) 46%,rgba(8,10,12,.86) 100%);
-  opacity:calc(1 - .34*var(--lit,0))}
-.light__beam{position:absolute;left:0;right:0;top:0;height:80%;pointer-events:none;
-  background:radial-gradient(ellipse 52% 90% at 50% 0%,rgba(234,242,255,.5),transparent 72%),
-             radial-gradient(ellipse 26% 60% at 22% 0%,rgba(198,226,255,.42),transparent 70%);
-  opacity:var(--lit,0)}
-.light__textveil{position:absolute;left:0;top:0;bottom:0;width:min(64%,780px);pointer-events:none;
-  background:linear-gradient(90deg,rgba(8,10,12,.94) 0%,rgba(8,10,12,.72) 46%,rgba(8,10,12,0) 100%);
-  opacity:calc(.3 + .7*var(--lit,0))}
-.light__bloom{position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen;
-  background:radial-gradient(ellipse 70% 46% at 50% 12%,rgba(206,230,255,.42),transparent 66%);
+  padding:clamp(84px,12vh,140px) 0}
+/* зарево от вывески по стене бокса */
+.light__glow{position:absolute;left:50%;top:50%;width:min(1560px,130%);aspect-ratio:2.1/1;
+  transform:translate(-50%,-50%);pointer-events:none;mix-blend-mode:screen;
+  background:radial-gradient(ellipse 50% 50% at 50% 50%,rgba(255,74,54,.42),rgba(255,60,40,.13) 44%,transparent 72%);
   opacity:calc(var(--lit,0) * var(--lit,0))}
-/* лампа под текстом: гаснет и разгорается вместе со светом */
-.lampbar{position:relative;display:block;margin-top:34px;width:min(280px,62%);height:7px;border-radius:4px;
-  background:linear-gradient(180deg,#242A31,#171B21);box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
-.lampbar::before{content:"";position:absolute;inset:0;border-radius:4px;
-  background:linear-gradient(180deg,#FFFFFF,#D6E8FF);opacity:var(--lit,0)}
-.lampbar::after{content:"";position:absolute;left:-34%;right:-34%;top:-560%;bottom:-560%;pointer-events:none;
-  background:radial-gradient(ellipse 44% 50% at 50% 50%,rgba(198,226,255,.55),transparent 70%);
-  opacity:calc(var(--lit,0) * var(--lit,0))}
-.light__in{position:relative;display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(28px,5vw,72px);align-items:center}
-.light h2{font-size:clamp(30px,4.2vw,54px);text-transform:uppercase;max-width:14ch}
-.light__lede{margin-top:18px;color:var(--text-primary);font-size:17px;max-width:44ch;text-shadow:0 1px 10px rgba(5,8,12,.75)}
-.checks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+.light__in{position:relative}
+.light h2{font-size:clamp(30px,4.2vw,54px);text-transform:uppercase;max-width:16ch}
+.light__lede{margin-top:18px;color:#C6CDD6;font-size:17px;max-width:46ch}
+
+/* сама вывеска: погашенная трубка, поверх неё зажжённая, снизу отблеск на полу */
+.neon{position:relative;width:100%;max-width:1180px;
+  margin:clamp(30px,5vh,58px) auto clamp(34px,6vh,70px)}
+.neon svg{display:block;width:100%;height:auto}
+.neon g{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.neon__off{stroke:#242A31;stroke-width:6.5}
+.neon__halo{stroke:var(--accent);stroke-width:14}
+.neon__mid{stroke:#FF5647;stroke-width:8}
+.neon__core{stroke:#FFE4DC;stroke-width:4.6}
+.neon__lit{position:absolute;inset:0;opacity:var(--lit,0)}
+.neon__flick{position:absolute;inset:0}
+/* запуск вывески: трубка схватывается не с первого раза, как настоящая */
+@keyframes neon-start{
+  0%{opacity:0}    5%{opacity:1}    9%{opacity:.05}  15%{opacity:.88}
+  19%{opacity:.08} 27%{opacity:1}   33%{opacity:.28} 41%{opacity:1}
+  47%{opacity:.6}  55%{opacity:1}   100%{opacity:1}}
+.neon.ignite .neon__flick{animation:neon-start 1.2s var(--ease) 1}
+
+.checks{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .checks li{display:flex;gap:14px;align-items:baseline;padding:15px 18px;
-  background:rgba(18,21,26,.55);border:1px solid var(--line);border-radius:3px;
+  background:rgba(15,18,22,.72);border:1px solid var(--line);border-radius:3px;
   transform:translateY(9px);
-  transition:transform .5s var(--ease),background .5s var(--ease),border-color .5s var(--ease),box-shadow .6s var(--ease)}
+  transition:transform .5s var(--ease),background .5s var(--ease),border-color .5s var(--ease),box-shadow .6s var(--ease);
+  transition-delay:calc(var(--d,0) * .34s)}
 .checks li.on{transform:none;background:linear-gradient(180deg,#232A33,#1A1F26);
   border-color:rgba(198,226,255,.6);
   box-shadow:0 0 0 1px rgba(198,226,255,.3),0 0 34px rgba(130,185,255,.42),
              inset 0 0 30px rgba(130,185,255,.16),0 12px 34px rgba(0,0,0,.45);
-  animation:ignite .6s var(--ease) 1}
+  animation:ignite .6s var(--ease) calc(var(--d,0) * .34s) 1}
 @keyframes ignite{
   0%{box-shadow:0 0 0 1px rgba(214,236,255,.7),0 0 60px rgba(160,205,255,.7),inset 0 0 46px rgba(160,205,255,.35),0 12px 34px rgba(0,0,0,.4)}
   38%{box-shadow:0 0 0 1px rgba(198,226,255,.3),0 0 16px rgba(130,185,255,.2),inset 0 0 20px rgba(130,185,255,.08),0 12px 34px rgba(0,0,0,.4)}
@@ -808,7 +811,8 @@ button{font:inherit;color:inherit}
    14. Адаптив
    ============================================================ */
 @media (max-width:1000px){
-  .light__in,.contacts__grid{grid-template-columns:1fr}
+  .contacts__grid{grid-template-columns:1fr}
+  .checks{grid-template-columns:1fr}
   .info{border-left:0;border-top:1px solid var(--line);padding-left:0;padding-top:12px}
   .sec__note{margin-left:0}
 }
@@ -825,6 +829,8 @@ button{font:inherit;color:inherit}
   .step__dot{display:none}
   .svc__row{gap:18px}
   .plate{padding:18px 18px}
+  /* на телефоне вывеска идёт от края до края, иначе теряется */
+  .neon{width:100vw;max-width:none;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw)}
 }
 @media (pointer:coarse){
   .btn{min-height:44px}
@@ -838,8 +844,8 @@ button{font:inherit;color:inherit}
   body{opacity:1}
   .reveal .part{opacity:1;transform:none}
   .svc .plate{clip-path:inset(0 0 0 0);opacity:1}
-  .light__img{opacity:.62}
-  .light__beam{opacity:1}
+  .neon__lit{opacity:1}
+  .light__glow{opacity:.5}
   .checks li{transform:none}
   .price.on{background:linear-gradient(90deg,rgba(30,35,42,.92),rgba(22,26,31,0) 78%)}
   .sparks{display:none}
@@ -1157,20 +1163,34 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
     </div>
   </section>
 
-  <!-- ===================== ЖИВОЙ МОМЕНТ ===================== -->
+  <!-- ===================== ЖИВОЙ МОМЕНТ: ВЫВЕСКА ===================== -->
   <section class="light" id="light">
-    <div class="light__img" aria-hidden="true"></div>
-    <div class="light__veil" aria-hidden="true"></div>
-    <div class="light__beam" aria-hidden="true"></div>
-    <div class="light__bloom" aria-hidden="true"></div>
-    <div class="light__textveil" aria-hidden="true"></div>
+    <div class="light__glow" aria-hidden="true"></div>
     <div class="wrap light__in">
       <div>
         <span class="tube tube--flick" aria-hidden="true"></span>
-        <h2>Включите свет в боксе</h2>
-        <p class="light__lede">Обычно клиент видит только счёт. Крутите дальше, и в боксе разгорается свет: становится видно, что мы смотрим на комплексной диагностике. Назад прокрутите, и свет погаснет.</p>
-        <span class="lampbar" aria-hidden="true"></span>
+        <h2>Комплексная диагностика</h2>
+        <p class="light__lede">Не только то, на что жалуетесь. Смотрим машину целиком и говорим, что нашли.</p>
       </div>
+
+      <div class="neon" id="neon" aria-hidden="true">
+        <svg viewBox="-10 -10 1040 320" focusable="false">
+          <defs>
+            <g id="carart"><path d="M 975 144 C 968 124 940 115 866 110 C 846 108 826 103 802 95 C 768 92 722 91 674 92 L 642 94 C 630 89 612 76 594 64 C 584 57 570 38 552 30 C 536 26 516 24 498 24 L 402 24 C 350 30 300 38 210 60 C 158 69 106 79 74 82 C 62 82 54 78 48 70 C 42 76 40 90 40 106 L 40 176 C 41 190 46 199 58 204 L 92 214 L 179 226 A 82 95 0 0 1 343 226 L 732 226 A 82 95 0 0 1 896 226 L 950 218 C 964 213 973 204 977 191 L 980 164 C 981 152 979 148 975 144 Z"/> <path d="M 597 92 L 543 31 L 362 33 L 339 91 Z"/> <path d="M 396 32 L 393 91"/> <path d="M 625 94 C 618 130 614 180 613 224"/> <path d="M 345 221 L 730 220"/> <circle cx="814" cy="217" r="68"/> <circle cx="814" cy="217" r="40"/> <path d="M 814.0 202.0 L 814.0 180.0 M 828.3 212.4 L 849.2 205.6 M 822.8 229.1 L 835.7 246.9 M 805.2 229.1 L 792.3 246.9 M 799.7 212.4 L 778.8 205.6 "/> <circle cx="261" cy="217" r="68"/> <circle cx="261" cy="217" r="40"/> <path d="M 261.0 202.0 L 261.0 180.0 M 275.3 212.4 L 296.2 205.6 M 269.8 229.1 L 282.7 246.9 M 252.2 229.1 L 239.3 246.9 M 246.7 212.4 L 225.8 205.6 "/></g>
+            <filter id="nglow" x="-14%" y="-40%" width="128%" height="180%"><feGaussianBlur stdDeviation="9"/></filter>
+            <filter id="nsoft" x="-8%" y="-20%" width="116%" height="140%"><feGaussianBlur stdDeviation="2.2"/></filter>
+          </defs>
+          <g class="neon__off"><use href="#carart"/></g>
+        </svg>
+        <div class="neon__lit"><div class="neon__flick">
+          <svg viewBox="-10 -10 1040 320" focusable="false">
+            <g class="neon__halo" filter="url(#nglow)"><use href="#carart"/></g>
+            <g class="neon__mid" filter="url(#nsoft)"><use href="#carart"/></g>
+            <g class="neon__core"><use href="#carart"/></g>
+          </svg>
+        </div></div>
+      </div>
+
       <ul class="checks" id="checks">
         <li style="--d:0.06"><b>01</b><span>Ошибки во всех блоках, а не только Check Engine</span></li>
         <li style="--d:0.28"><b>02</b><span>Ходовая на подъёмнике: люфты, пыльники, сайлентблоки</span></li>
@@ -1295,6 +1315,6 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
   <span>Написать в MAX</span>
 </a>
 
-<script src="assets/site.js?v=202608260811" defer></script>
+<script src="assets/site.js?v=202608261410" defer></script>
 </body>
 </html>

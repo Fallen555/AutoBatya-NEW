@@ -564,7 +564,9 @@
      ---------------------------------------------------------- */
   var lightSec = document.getElementById('light');
   var priceList = document.getElementById('price-list');
+  var neonSign = document.getElementById('neon');
   var lit = -1;
+  var neonOn = false;
 
   var checkItems = [].slice.call(document.querySelectorAll('.checks li')).map(function (el) {
     return { el: el, d: parseFloat(el.style.getPropertyValue('--d') || '0'), on: false };
@@ -581,17 +583,6 @@
     return clamp((start - r.top) / (start - finish), 0, 1);
   }
 
-  function markSequence(items, p) {
-    for (var i = 0; i < items.length; i++) {
-      var it = items[i];
-      var on = p > it.d + 0.04;
-      if (on !== it.on) {
-        it.on = on;
-        it.el.classList.toggle('on', on);
-      }
-    }
-  }
-
   // длинный список зажигается построчно: строка загорается, когда пересекает линию на экране
   function markByLine(items, lineFrac) {
     var line = window.innerHeight * lineFrac;
@@ -605,15 +596,20 @@
     }
   }
 
+  // вывеска зажигается один раз с дрожью, при обратной прокрутке взводится заново
   function setLit(p) {
+    if (neonSign) {
+      if (!neonOn && p > 0.1) { neonOn = true; neonSign.classList.add('ignite'); }
+      else if (neonOn && p < 0.02) { neonOn = false; neonSign.classList.remove('ignite'); }
+    }
     if (Math.abs(p - lit) < 0.006) return;
     lit = p;
     if (lightSec) lightSec.style.setProperty('--lit', p.toFixed(3));
-    markSequence(checkItems, p);
   }
 
   function driveScrollScenes() {
-    if (lightSec) setLit(smoothstep(sectionProgress(lightSec, 0.86, 0.3), 0, 1));
+    if (lightSec) setLit(smoothstep(sectionProgress(lightSec, 0.86, 0.34), 0, 1));
+    if (checkItems.length) markByLine(checkItems, 0.86);
     if (priceList) markByLine(priceItems, 0.82);
   }
 
@@ -875,7 +871,9 @@
     [].slice.call(document.querySelectorAll('.svc')).forEach(function (el) { el.classList.add('in'); });
     if (wireSvg) wireSvg.style.setProperty('--draw', 1);
     setLit(1);
-    markSequence(priceItems, 1);
+    [checkItems, priceItems].forEach(function (items) {
+      items.forEach(function (it) { it.on = true; it.el.classList.add('on'); });
+    });
     if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
   }
 
