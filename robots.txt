@@ -1,5 +1,4 @@
 User-agent: *
 Allow: /
-Disallow: /pult.html
 
 Sitemap: https://fallen555.github.io/AutoBatya-NEW/sitemap.xml
