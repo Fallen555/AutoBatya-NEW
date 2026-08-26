@@ -227,19 +227,23 @@
       }, function () { return []; /* сеть моргнула, попробуем в следующий раз */ });
   }
 
+  // Опрашиваем по цепочке, а не по таймеру: следующий запрос уходит только
+  // после ответа на предыдущий. Иначе на медленной связи запросы копятся
+  // и занимают все соединения, а отправка не может пробиться.
   function startTimer() {
     stopTimer();
     var every = state.open ? 6000 : 60000;
-    state.timer = setInterval(function () {
-      if (document.hidden) return;
-      poll(state.open);
-    }, every);
+    (function loop() {
+      state.timer = setTimeout(function () {
+        if (document.hidden) { loop(); return; }
+        poll(state.open).then(loop, loop);
+      }, every);
+    })();
   }
-  function stopTimer() { if (state.timer) { clearInterval(state.timer); state.timer = null; } }
+  function stopTimer() { if (state.timer) { clearTimeout(state.timer); state.timer = null; } }
 
   /* ---------------- открытие и закрытие ---------------- */
   function openChat() {
-    warmUp();
     if (state.open) return;
     state.open = true;
     root.classList.add('open');
