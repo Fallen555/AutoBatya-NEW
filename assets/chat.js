@@ -53,22 +53,48 @@
   // говорила, что именно произошло, а не общее "нет связи".
   var lastNetError = '';
 
-  function api(action, data) {
-    var body = Object.assign({ action: action }, data || {});
-    return fetch(API, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(body)
-    }).then(function (r) {
-      if (!r.ok) lastNetError = 'ответ ' + r.status;
-      return r.json().catch(function () {
-        lastNetError = 'ответ ' + r.status + ', не разобрать';
-        return { ok: false, error: 'Сервер не ответил' };
+  function wait(ms) {
+    return new Promise(function (res) { setTimeout(res, ms); });
+  }
+
+  // Повтор разрешаем только там, где он безвреден: опрос и проверка связи.
+  // Отправку и открытие диалога не повторяем, иначе при потерянном ответе
+  // сообщение уйдёт дважды.
+  function api(action, data, opts) {
+    opts = opts || {};
+    var retries = opts.retries || 0;
+    var body = JSON.stringify(Object.assign({ action: action }, data || {}));
+
+    function attempt(n) {
+      var ctl = (typeof AbortController === 'function') ? new AbortController() : null;
+      var timer = setTimeout(function () { if (ctl) ctl.abort(); }, opts.timeout || 25000);
+      return fetch(API, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: body,
+        signal: ctl ? ctl.signal : undefined
+      }).then(function (r) {
+        clearTimeout(timer);
+        if (!r.ok) lastNetError = 'ответ ' + r.status;
+        return r.json().catch(function () {
+          lastNetError = 'ответ ' + r.status + ', не разобрать';
+          return { ok: false, error: 'Сервер не ответил' };
+        });
+      }, function (e) {
+        clearTimeout(timer);
+        lastNetError = (e && e.message) ? String(e.message).slice(0, 80) : 'запрос не ушёл';
+        if (n < retries) return wait(700 * (n + 1)).then(function () { return attempt(n + 1); });
+        throw e;
       });
-    }, function (e) {
-      lastNetError = (e && e.message) ? String(e.message).slice(0, 80) : 'запрос не ушёл';
-      throw e;
-    });
+    }
+    return attempt(0);
+  }
+
+  // Функция на сервере засыпает и просыпается несколько секунд. Пока она
+  // спит, встроенные браузеры мессенджеров успевают оборвать соединение.
+  // Поэтому будим её заранее и молча: к моменту отправки она уже на ногах.
+  function warmUp() {
+    api('ping', {}, { retries: 1, timeout: 9000 }).catch(function () { /* и не надо */ });
   }
 
   function remember() {
@@ -81,7 +107,7 @@
   function ensureChat() {
     if (state.id && state.secret) return Promise.resolve(true);
     if (state.starting) return state.starting;
-    state.starting = api('start', { contact: els.contactInput.value }).then(function (r) {
+    state.starting = api('start', { contact: els.contactInput.value }, { timeout: 30000 }).then(function (r) {
       state.starting = null;
       if (!r.ok) { note(r.error || 'Чат недоступен', true); return false; }
       state.id = r.chatId; state.secret = r.secret; state.lastId = 0;
@@ -181,11 +207,12 @@
   /* ---------------- опрос ---------------- */
   function poll(markRead) {
     if (!state.id || !state.secret) return Promise.resolve();
-    return api('poll', { chatId: state.id, secret: state.secret, since: state.lastId, read: !!markRead })
+    return api('poll', { chatId: state.id, secret: state.secret, since: state.lastId, read: !!markRead },
+      { retries: 1, timeout: 15000 })
       .then(function (r) {
         if (!r.ok) {
           if (r.error === 'Диалог не найден') forget();
-          return;
+          return [];
         }
         var atBottom = els.log.scrollHeight - els.log.scrollTop - els.log.clientHeight < 60;
         var fresh = 0;
@@ -196,7 +223,8 @@
         if (fresh && (atBottom || markRead)) scrollDown();
         if (markRead) setBadge(0);
         else if (typeof r.unread === 'number') setBadge(r.unread);
-      }, function () { /* сеть моргнула, попробуем в следующий раз */ });
+        return r.messages || [];
+      }, function () { return []; /* сеть моргнула, попробуем в следующий раз */ });
   }
 
   function startTimer() {
@@ -211,6 +239,7 @@
 
   /* ---------------- открытие и закрытие ---------------- */
   function openChat() {
+    warmUp();
     if (state.open) return;
     state.open = true;
     root.classList.add('open');
@@ -415,9 +444,29 @@
       note('');
       return poll(true).then(scrollDown);
     }).catch(function (e) {
-      if (!(e && e.quiet)) {
-        note('Не отправилось' + (lastNetError ? ': ' + lastNetError : '') + '. Попробуйте ещё раз', true);
-      }
+      if (e && e.quiet) return;
+      // Ответ мог потеряться по дороге, а сообщение при этом дойти. Прежде чем
+      // ругаться, спрашиваем сервер, есть ли оно там. Так ведут себя встроенные
+      // браузеры мессенджеров: рвут соединение, не дождавшись ответа.
+      note('Проверяю, дошло ли...');
+      return wait(1200).then(function () {
+        return poll(true);
+      }).then(function (list) {
+        var landed = (list || []).some(function (m) {
+          return m.author === 'user' && (m.body || '') === text;
+        });
+        if (landed) {
+          els.input.value = '';
+          grow();
+          state.pending = [];
+          drawChips();
+          els.contact.hidden = true;
+          note('');
+          scrollDown();
+        } else {
+          note('Не отправилось' + (lastNetError ? ': ' + lastNetError : '') + '. Попробуйте ещё раз', true);
+        }
+      });
     }).then(function () {
       state.busy = false;
       els.send.disabled = false;
@@ -425,6 +474,10 @@
   }
 
   /* ---------------- запуск ---------------- */
+  // Будим функцию сразу, но не в самый занятой момент загрузки страницы:
+  // к тому времени, когда человек надумает написать, она уже проснётся.
+  setTimeout(warmUp, 2500);
+
   if (state.id && state.secret) {
     els.contact.hidden = true;
     poll(false);

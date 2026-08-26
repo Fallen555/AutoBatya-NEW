@@ -152,13 +152,42 @@ button,input,textarea{font:inherit;color:inherit}
   var pass = '';
   var cur = null, lastId = 0, pending = [], seen = {}, timers = [];
 
-  function api(action, data) {
-    return fetch(API, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(Object.assign({ action: action, password: pass }, data || {}))
-    }).then(function (r) { return r.json().catch(function () { return { ok: false, error: 'Сервер не ответил' }; }); });
+  // Функция на сервере просыпается несколько секунд, а встроенные браузеры
+  // мессенджеров рвут соединение, не дождавшись. Поэтому даём запросу время
+  // и повторяем один раз, если он сорвался на полпути.
+  function api(action, data, opts) {
+    opts = opts || {};
+    var retries = typeof opts.retries === 'number' ? opts.retries : 1;
+    var body = JSON.stringify(Object.assign({ action: action, password: pass }, data || {}));
+    function attempt(n) {
+      var ctl = (typeof AbortController === 'function') ? new AbortController() : null;
+      var timer = setTimeout(function () { if (ctl) ctl.abort(); }, opts.timeout || 25000);
+      return fetch(API, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: body,
+        signal: ctl ? ctl.signal : undefined
+      }).then(function (r) {
+        clearTimeout(timer);
+        return r.json().catch(function () { return { ok: false, error: 'Сервер не ответил' }; });
+      }, function (e) {
+        clearTimeout(timer);
+        if (n < retries) {
+          return new Promise(function (res) { setTimeout(res, 700 * (n + 1)); })
+            .then(function () { return attempt(n + 1); });
+        }
+        throw e;
+      });
+    }
+    return attempt(0);
   }
+
+  // Будим функцию, пока хозяин набирает пароль.
+  fetch(API, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ action: 'ping' })
+  }).catch(function () { /* не важно */ });
   function two(n) { return n < 10 ? '0' + n : '' + n; }
   function when(iso) {
     var d = new Date(iso);
@@ -184,7 +213,9 @@ button,input,textarea{font:inherit;color:inherit}
       drawList(r.chats || []);
       timers.push(setInterval(refreshList, 10000));
       timers.push(setInterval(function () { if (cur) loadThread(cur, true); }, 5000));
-    }, function () { $('gate-err').textContent = 'Нет связи с сервером чата'; });
+    }, function () {
+      $('gate-err').textContent = 'Сервер чата не ответил вовремя. Нажмите «Войти» ещё раз';
+    });
   });
 
   try {
