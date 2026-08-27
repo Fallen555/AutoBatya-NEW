@@ -602,23 +602,30 @@ button{font:inherit;color:inherit}
 .light{position:relative;overflow:hidden;background:var(--canvas-deep);
   padding:clamp(84px,12vh,140px) 0}
 /* зарево от вывески по стене бокса */
-.light__glow{position:absolute;left:50%;top:50%;width:min(1560px,130%);aspect-ratio:2.1/1;
+.light__glow{position:absolute;left:64%;top:56%;width:min(1560px,130%);aspect-ratio:2.1/1;
   transform:translate(-50%,-50%);pointer-events:none;mix-blend-mode:screen;
   background:radial-gradient(ellipse 50% 50% at 50% 50%,rgba(255,74,54,.42),rgba(255,60,40,.13) 44%,transparent 72%);
   opacity:calc(var(--lit,0) * var(--lit,0))}
 .light__in{position:relative}
+.light__head{max-width:52ch}
 .light h2{font-size:clamp(30px,4.2vw,54px);text-transform:uppercase;max-width:16ch}
 .light__lede{margin-top:18px;color:#C6CDD6;font-size:17px;max-width:46ch}
+/* слева столбик пунктов, справа вывеска */
+.light__row{margin-top:clamp(30px,5vh,58px);display:grid;
+  grid-template-columns:minmax(0,.88fr) minmax(0,1.24fr);
+  gap:clamp(26px,4vw,60px);align-items:center}
 
-/* сама вывеска: погашенная трубка, поверх неё зажжённая, снизу отблеск на полу */
-.neon{position:relative;width:100%;max-width:1180px;
-  margin:clamp(30px,5vh,58px) auto clamp(34px,6vh,70px)}
+/* сама вывеска: погашенная трубка, поверх неё зажжённая */
+.neon{position:relative;width:100%}
 .neon svg{display:block;width:100%;height:auto}
 .neon g{fill:none;stroke-linecap:round;stroke-linejoin:round}
 .neon__off{stroke:#242A31;stroke-width:6.5}
-.neon__halo{stroke:var(--accent);stroke-width:14}
-.neon__mid{stroke:#FF5647;stroke-width:8}
-.neon__core{stroke:#FFE4DC;stroke-width:4.6}
+.neon__halo{stroke:var(--accent);stroke-width:15}
+.neon__mid{stroke:#FF5647;stroke-width:8.6}
+.neon__core{stroke:#FFE4DC;stroke-width:5}
+.neon__halo.neon--lamp{stroke:#5FB6FF}
+.neon__mid.neon--lamp{stroke:#BFE2FF}
+.neon__core.neon--lamp{stroke:#FFFFFF}
 .neon__lit{position:absolute;inset:0;opacity:var(--lit,0)}
 .neon__flick{position:absolute;inset:0}
 /* запуск вывески: трубка схватывается не с первого раза, как настоящая */
@@ -628,7 +635,7 @@ button{font:inherit;color:inherit}
   47%{opacity:.6}  55%{opacity:1}   100%{opacity:1}}
 .neon.ignite .neon__flick{animation:neon-start 1.2s var(--ease) 1}
 
-.checks{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.checks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
 .checks li{display:flex;gap:14px;align-items:baseline;padding:15px 18px;
   background:rgba(15,18,22,.72);border:1px solid var(--line);border-radius:3px;
   transform:translateY(9px);
@@ -812,7 +819,8 @@ button{font:inherit;color:inherit}
    ============================================================ */
 @media (max-width:1000px){
   .contacts__grid{grid-template-columns:1fr}
-  .checks{grid-template-columns:1fr}
+  .light__row{grid-template-columns:1fr;gap:clamp(24px,4vh,40px)}
+  .neon{order:-1}
   .info{border-left:0;border-top:1px solid var(--line);padding-left:0;padding-top:12px}
   .sec__note{margin-left:0}
 }
@@ -830,7 +838,8 @@ button{font:inherit;color:inherit}
   .svc__row{gap:18px}
   .plate{padding:18px 18px}
   /* на телефоне вывеска идёт от края до края, иначе теряется */
-  .neon{width:100vw;max-width:none;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw)}
+  .neon{order:-1;width:100vw;max-width:none;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw)}
+  .light__glow{left:50%}
 }
 @media (pointer:coarse){
   .btn{min-height:44px}
@@ -1167,36 +1176,44 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
   <section class="light" id="light">
     <div class="light__glow" aria-hidden="true"></div>
     <div class="wrap light__in">
-      <div>
+      <div class="light__head">
         <span class="tube tube--flick" aria-hidden="true"></span>
         <h2>Комплексная диагностика</h2>
         <p class="light__lede">Не только то, на что жалуетесь. Смотрим машину целиком и говорим, что нашли.</p>
       </div>
 
-      <div class="neon" id="neon" aria-hidden="true">
-        <svg viewBox="-10 -10 1040 320" focusable="false">
-          <defs>
-            <g id="carart"><path d="M 975 144 C 968 124 940 115 866 110 C 846 108 826 103 802 95 C 768 92 722 91 674 92 L 642 94 C 630 89 612 76 594 64 C 584 57 570 38 552 30 C 536 26 516 24 498 24 L 402 24 C 350 30 300 38 210 60 C 158 69 106 79 74 82 C 62 82 54 78 48 70 C 42 76 40 90 40 106 L 40 176 C 41 190 46 199 58 204 L 92 214 L 179 226 A 82 95 0 0 1 343 226 L 732 226 A 82 95 0 0 1 896 226 L 950 218 C 964 213 973 204 977 191 L 980 164 C 981 152 979 148 975 144 Z"/> <path d="M 597 92 L 543 31 L 362 33 L 339 91 Z"/> <path d="M 396 32 L 393 91"/> <path d="M 625 94 C 618 130 614 180 613 224"/> <path d="M 345 221 L 730 220"/> <circle cx="814" cy="217" r="68"/> <circle cx="814" cy="217" r="40"/> <path d="M 814.0 202.0 L 814.0 180.0 M 828.3 212.4 L 849.2 205.6 M 822.8 229.1 L 835.7 246.9 M 805.2 229.1 L 792.3 246.9 M 799.7 212.4 L 778.8 205.6 "/> <circle cx="261" cy="217" r="68"/> <circle cx="261" cy="217" r="40"/> <path d="M 261.0 202.0 L 261.0 180.0 M 275.3 212.4 L 296.2 205.6 M 269.8 229.1 L 282.7 246.9 M 252.2 229.1 L 239.3 246.9 M 246.7 212.4 L 225.8 205.6 "/></g>
-            <filter id="nglow" x="-14%" y="-40%" width="128%" height="180%"><feGaussianBlur stdDeviation="9"/></filter>
-            <filter id="nsoft" x="-8%" y="-20%" width="116%" height="140%"><feGaussianBlur stdDeviation="2.2"/></filter>
-          </defs>
-          <g class="neon__off"><use href="#carart"/></g>
-        </svg>
-        <div class="neon__lit"><div class="neon__flick">
-          <svg viewBox="-10 -10 1040 320" focusable="false">
-            <g class="neon__halo" filter="url(#nglow)"><use href="#carart"/></g>
-            <g class="neon__mid" filter="url(#nsoft)"><use href="#carart"/></g>
-            <g class="neon__core"><use href="#carart"/></g>
-          </svg>
-        </div></div>
-      </div>
+      <div class="light__row">
+        <ul class="checks" id="checks">
+          <li style="--d:0.06"><b>01</b><span>Ошибки во всех блоках, а не только Check Engine</span></li>
+          <li style="--d:0.28"><b>02</b><span>Ходовая на подъёмнике: люфты, пыльники, сайлентблоки</span></li>
+          <li style="--d:0.5"><b>03</b><span>Тормоза: диски, колодки, состояние жидкости</span></li>
+          <li style="--d:0.72"><b>04</b><span>Течи и запотевания, ремни, фильтры, уровни</span></li>
+        </ul>
 
-      <ul class="checks" id="checks">
-        <li style="--d:0.06"><b>01</b><span>Ошибки во всех блоках, а не только Check Engine</span></li>
-        <li style="--d:0.28"><b>02</b><span>Ходовая на подъёмнике: люфты, пыльники, сайлентблоки</span></li>
-        <li style="--d:0.5"><b>03</b><span>Тормоза: диски, колодки, состояние жидкости</span></li>
-        <li style="--d:0.72"><b>04</b><span>Течи и запотевания, ремни, фильтры, уровни</span></li>
-      </ul>
+        <div class="neon" id="neon" aria-hidden="true">
+          <svg viewBox="0 0 1000 449" focusable="false">
+            <defs>
+              <g id="carbody"><path d="M578.1 192.7 L569 156.1 L534.1 140.9 L449.5 134.5 L428.3 131.8 L408.2 124.5 L388.5 112.9 L363.6 110.4 L331 111.3 L297.8 114.9 L276.4 119 L273.3 112.8 L275.5 74.3 L284.2 52 L280.8 43.9 L275.4 40.5 L266.2 40 L209.5 49.6 L181.7 59.9 L154.7 71.5 L104.2 98.1 L79.7 109 L53 123.8 L51 124.1 L56.4 113.5 L42.1 132 L40 146.6 L40.6 223.8 L41.5 232.1 L48.9 248.1 L69.2 264.1 L128.8 273.9 L126.5 236.7 L120.3 204.2 L111.2 181.1 L104.2 172.4 L97 169.5 L93.4 170.2 L86.7 175.9 L83.5 180.6 L78 193.7 L73.7 210.7 L70.8 230.8 L69.2 264.1 L336.1 307.9 L482.4 329.1 L481.8 309.8 L479.8 290.6 L472 254.1 L466.3 237.4 L459.6 222.1 L452.1 208.4 L443.8 196.6 L434.9 186.7 L425.5 179 L415.9 173.5 L406.6 170.2 L398.4 169.1 L390.3 170.2 L382.6 173.4 L375.2 178.6 L368.2 185.6 L361.8 194.5 L350.8 216.8 L342.7 244.1 L337.7 274.9 L336.1 307.9 L482.2 329.1 L546 323.3 L563.8 316.3 L575.3 301.2 L580.6 278.2 L584.6 229.3 L583.9 207.2 L582 196.1 L578.1 192.7"/><path d="M954.5 188.6 L946.7 158.8 L916.4 146.3 L823.8 138.8 L806 132.8 L782.8 123.1 L750.4 120.7 L709.3 121.1 L670.6 123.9 L646.8 127.2 L634.8 121.7 L580 86.8 L557.5 65.9 L539.7 58 L526.4 54.5 L512.2 53.7 L444.7 61.5 L420.8 70.8 L400.5 81.4 L371.4 105.9"/><path d="M954.5 188.6 L957.9 191.3 L959.4 200.3 L960 218.3 L956.3 258.2 L951.6 276.9 L941.5 289.3 L926 295.1 L870.2 300.1"/><path d="M564.1 256.6 L786 249.3 L930.3 241.1 L930.1 276.4 L860.6 283.2 L768.9 289.8 L564.1 299.6 L564.1 256.6"/><path d="M556.9 143.8 L909.7 148.4 L909.3 212.7 L766.1 217.3 L556.8 221.6 L556.9 143.8"/><path d="M724.1 165.1 L801.7 165.3 L801.5 197 L724 198.1 L724.1 165.1"/><path d="M546 137.9 L640.3 132.8 L740.8 132.2 L833.6 136.5 L907.7 143.6"/><path d="M826.6 141 L689.9 125.1 L587.3 125.6"/><path d="M328.1 119.2 L307 47.4 L514.8 58.5 L601.2 125.3 L328.1 119.2"/><path d="M264.2 118.5 L287.2 46.5 L195.8 62.7 L140.1 125.8 L264.2 118.5"/><path d="M266.1 119.7 L264.3 291.5"/><path d="M351.9 296.3 L353.8 268.9 L356.2 256 L363.8 232.9 L368.9 223.1 L374.7 214.9 L381.1 208.2 L388.1 203.4 L395.6 200.6 L403.3 199.8 L411.1 201.1 L418.9 204.6 L426.6 210.2 L433.8 217.9 L440.5 227.5 L446.5 238.9 L455.9 265.9 L460.8 296.7 L461.4 312.5 L460.8 328.1 L455.9 357.3 L446.6 381.6 L440.6 391.1 L433.9 398.7 L426.7 404.3 L419.1 407.6 L411.3 408.8 L403.4 407.8 L395.7 404.7 L388.3 399.7 L381.3 392.8 L374.9 384.4 L369.1 374.4 L359.7 351 L356.4 337.9 L353.9 324.3 L351.9 296.3"/><path d="M371.4 299.2 L374.2 274.3 L379 260.1 L382.2 254.2 L389.8 245.4 L394.1 242.6 L403.3 240.8 L412.7 244.1 L417.3 247.7 L421.6 252.5 L429 265.2 L434.5 281.4 L437.7 309 L437.3 318.2 L434.5 335.6 L429.1 350.1 L425.6 356 L417.3 364.2 L412.8 366.4 L403.4 366.9 L394.2 362.4 L389.9 358.4 L382.3 347.3 L376.4 333 L374.3 325 L371.4 299.2"/><path d="M77.9 255.9 L79.7 228.4 L83.1 212.6 L88 200.3 L90.9 195.8 L97.4 190.5 L100.8 189.9 L107.7 193 L111.1 196.6 L117.2 207.9 L119.8 215.3 L123.9 232.8 L126.4 263.1 L124.2 292.6 L120.3 308.9 L114.8 320.9 L111.7 324.9 L108.4 327.6 L101.5 328.6 L94.7 324.1 L91.6 319.9 L83.6 300.8 L80 284 L77.9 255.9"/><path d="M86.8 257.2 L88 240.3 L91.5 226.7 L96.8 218.7 L100.9 217.3 L105.1 219.3 L110.8 228.5 L114.7 243.5 L116.2 261.6 L114.9 279.2 L111.1 293.1 L107.5 298.9 L103.5 301.4 L101.4 301.4 L95.3 296.3 L90.4 284.8 L87.4 268.9 L86.8 257.2"/></g>
+              <g id="carlamp"><path d="M630.4 182.4 L627.9 168.4 L620.7 156.7 L610 149.5 L603.8 147.9 L597.5 147.9 L591.2 149.3 L580 156.5 L572.3 168.3 L569.6 182.7 L572.3 196.9 L579.9 208.7 L585.2 212.9 L591.1 215.8 L597.3 217.2 L603.7 217.1 L609.8 215.5 L615.5 212.5 L620.6 208.1 L627.8 196.4 L630.4 182.4"/><path d="M903.5 180.6 L902.3 168.7 L898.6 158.7 L892.9 152.5 L889.7 151.1 L886.3 151.1 L882.9 152.3 L876.8 158.5 L872.6 168.6 L871 180.9 L871.4 187.2 L874.2 198.6 L879.4 206.9 L885.9 210.5 L892.6 209 L898.3 202.6 L902.1 192.6 L903.5 180.6"/></g>
+              <filter id="nglow" x="-12%" y="-32%" width="124%" height="164%"><feGaussianBlur stdDeviation="10"/></filter>
+              <filter id="nsoft" x="-7%" y="-18%" width="114%" height="136%"><feGaussianBlur stdDeviation="2.5"/></filter>
+              <filter id="nglowL" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="10"/></filter>
+              <filter id="nsoftL" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2.5"/></filter>
+            </defs>
+            <g class="neon__off"><use href="#carbody"/><use href="#carlamp"/></g>
+          </svg>
+          <div class="neon__lit"><div class="neon__flick">
+            <svg viewBox="0 0 1000 449" focusable="false">
+              <g class="neon__halo" filter="url(#nglow)"><use href="#carbody"/></g>
+              <g class="neon__halo neon--lamp" filter="url(#nglowL)"><use href="#carlamp"/></g>
+              <g class="neon__mid" filter="url(#nsoft)"><use href="#carbody"/></g>
+              <g class="neon__mid neon--lamp" filter="url(#nsoftL)"><use href="#carlamp"/></g>
+              <g class="neon__core"><use href="#carbody"/></g>
+              <g class="neon__core neon--lamp"><use href="#carlamp"/></g>
+            </svg>
+          </div></div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -1315,6 +1332,6 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
   <span>Написать в MAX</span>
 </a>
 
-<script src="assets/site.js?v=202608261410" defer></script>
+<script src="assets/site.js?v=202608271520" defer></script>
 </body>
 </html>
