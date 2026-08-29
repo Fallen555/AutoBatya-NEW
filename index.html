@@ -337,6 +337,10 @@ button{font:inherit;color:inherit}
 .btn:active{transform:translateY(0)}
 .btn--ghost{background:transparent;color:var(--text-primary);box-shadow:inset 0 0 0 1px var(--neon-dim)}
 .btn--ghost:hover{background:rgba(234,242,255,.06);box-shadow:inset 0 0 0 1px var(--neon-dim)}
+/* кнопка с номером: у моноширинного шрифта ноль с точкой внутри и в мелком
+   кегле читается как восьмёрка, поэтому цифры набраны основным шрифтом */
+.btn--tel{font-family:var(--body);letter-spacing:.06em;text-transform:none;
+  font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
 .btn svg{width:15px;height:15px;flex:0 0 auto}
 
 /* ============================================================
@@ -942,7 +946,7 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
           <p class="band-title split">Приезжайте, разберёмся</p>
           <p class="band-sub">Пн-Пт с 9:00 до 20:00. Сб-Вс по записи.</p>
           <div class="band__cta">
-            <a class="btn" href="tel:+79040172588">
+            <a class="btn btn--tel" href="tel:+79040172588">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6.6 3.8 9 8.2 6.8 10.4a12 12 0 0 0 6.8 6.8l2.2-2.2 4.4 2.4-.6 3.4a2 2 0 0 1-2.2 1.6C9.6 21.6 2.4 14.4 1.6 6.6A2 2 0 0 1 3.2 4.4z"/></svg>
               +7 904 017-25-88
             </a>
@@ -968,7 +972,7 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
       <p class="kicker mono chip">Тверь · Вагжанова 11к2</p>
       <h1>Авто<span class="hl">Батя</span></h1>
       <p>Мастерская, где всё объясняют. Сначала причина, потом ремонт.</p>
-      <a class="btn" href="tel:+79040172588">
+      <a class="btn btn--tel" href="tel:+79040172588">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6.6 3.8 9 8.2 6.8 10.4a12 12 0 0 0 6.8 6.8l2.2-2.2 4.4 2.4-.6 3.4a2 2 0 0 1-2.2 1.6C9.6 21.6 2.4 14.4 1.6 6.6A2 2 0 0 1 3.2 4.4z"/></svg>
         +7 904 017-25-88
       </a>
