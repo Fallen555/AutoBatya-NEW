@@ -1,0 +1,87 @@
+/* Оформление правовых страниц: тот же тёмный набор, что и на главной,
+   но без анимаций — здесь важно только чтение. */
+@font-face{font-family:'Oswald';font-style:normal;font-weight:700;font-display:swap;src:url('fonts/oswald-700.woff2') format('woff2')}
+@font-face{font-family:'Golos Text';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/golos-text-400.woff2') format('woff2')}
+@font-face{font-family:'Golos Text';font-style:normal;font-weight:500;font-display:swap;src:url('fonts/golos-text-500.woff2') format('woff2')}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:700;font-display:swap;src:url('fonts/jetbrains-mono-700.woff2') format('woff2')}
+
+:root{
+  --canvas:#0D0F12;
+  --canvas-deep:#080A0C;
+  --panel:#161A1F;
+  --line:#2A3038;
+  --accent:#FF3B2B;
+  --text-primary:#EDEFF2;
+  --text-secondary:#C6CDD6;
+  --display:'Oswald','Arial Narrow',sans-serif;
+  --body:'Golos Text','Segoe UI',system-ui,sans-serif;
+  --mono:'JetBrains Mono','Courier New',monospace;
+  --pad:clamp(20px,5vw,72px);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--canvas);color:var(--text-primary);
+  font-family:var(--body);font-size:17px;line-height:1.62;
+  font-feature-settings:"tnum" 0}
+.wrap{max-width:820px;margin:0 auto;padding-left:var(--pad);padding-right:var(--pad)}
+
+.dochead{border-bottom:1px solid var(--line);background:var(--canvas-deep);padding:22px 0}
+.dochead__in{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.logo{font-family:var(--display);font-weight:700;font-size:21px;letter-spacing:.02em;
+  text-transform:uppercase;text-decoration:none;color:var(--text-primary)}
+.logo b{color:var(--accent);font-weight:700}
+.back{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;
+  text-decoration:none;color:var(--text-secondary);border-bottom:1px solid var(--line);padding-bottom:3px}
+.back:hover,.back:focus-visible{color:var(--text-primary);border-color:var(--accent)}
+
+main{padding:clamp(38px,6vh,68px) 0 clamp(56px,9vh,96px)}
+h1{font-family:var(--display);font-weight:700;text-transform:uppercase;
+  font-size:clamp(27px,4.4vw,44px);line-height:1.1;margin:0 0 10px}
+.sub{color:var(--text-secondary);margin:0 0 34px;font-size:16px}
+h2{font-family:var(--display);font-weight:700;text-transform:uppercase;
+  font-size:clamp(19px,2.4vw,25px);line-height:1.2;margin:38px 0 12px}
+h3{font-size:17px;font-weight:500;margin:24px 0 8px}
+p,li{margin:0 0 12px}
+ul,ol{margin:0 0 16px;padding-left:22px}
+li{padding-left:4px}
+a{color:var(--text-primary);text-decoration:underline;text-underline-offset:3px;
+  text-decoration-color:rgba(255,59,43,.6)}
+a:hover,a:focus-visible{text-decoration-color:var(--accent)}
+strong{font-weight:500;color:#fff}
+
+/* карточка с реквизитами и другие врезки */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:3px;
+  padding:clamp(18px,3vw,26px);margin:0 0 26px}
+.card p:last-child,.card ul:last-child,.card dl:last-child{margin-bottom:0}
+dl{margin:0}
+dl div{display:flex;gap:12px;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid rgba(234,242,255,.07)}
+dl div:last-child{border-bottom:0}
+dt{flex:0 0 190px;color:var(--text-secondary);font-size:15px}
+dd{margin:0;flex:1 1 240px;min-width:0}
+
+/* незаполненное место: видно сразу, случайно не опубликуешь */
+.fill{display:inline-block;background:rgba(255,59,43,.14);border:1px dashed var(--accent);
+  border-radius:2px;padding:1px 8px;color:#FFC9C2;font-family:var(--mono);
+  font-size:13px;letter-spacing:.04em}
+
+.note{border-left:3px solid var(--accent);padding:2px 0 2px 16px;margin:0 0 26px;
+  color:var(--text-secondary);font-size:16px}
+
+table{width:100%;border-collapse:collapse;margin:0 0 20px;font-size:16px}
+th,td{text-align:left;vertical-align:top;padding:11px 12px;border-bottom:1px solid var(--line)}
+th{color:var(--text-secondary);font-weight:400;font-size:15px}
+.tablewrap{overflow-x:auto;margin:0 0 20px}
+.tablewrap table{margin:0;min-width:520px}
+
+.foot{border-top:1px solid var(--line);background:var(--canvas-deep);padding:26px 0 34px}
+.foot p{color:var(--text-secondary);font-size:15px;margin:0 0 6px}
+.foot a{color:var(--text-secondary)}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media print{
+  body{background:#fff;color:#000}
+  .dochead,.foot,.back{display:none}
+  .card{border:1px solid #999;background:#fff}
+  a{color:#000;text-decoration-color:#999}
+  .fill{background:#fff;color:#000;border:1px dashed #000}
+}
