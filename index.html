@@ -481,6 +481,11 @@ button{font:inherit;color:inherit}
 .static-hero p{margin-top:16px;font-size:17px;max-width:26ch;color:var(--text-primary);text-shadow:var(--tshadow)}
 .static-hero .btn{margin-top:26px;text-shadow:none}
 .static-hero .kicker{text-shadow:var(--tshadow)}
+/* Адрес — это подпись, а не абзац. Правило .static-hero p давало ему ширину
+   в 26 знаков, и номер дома уезжал на вторую строку. Держим плашку в одну
+   строку, а кегль привязываем к ширине экрана: на обычных телефонах он
+   остаётся прежним, на совсем узких плашка ужимается, но не переносится. */
+.static-hero .chip{max-width:none;white-space:nowrap;font-size:min(17px,4.5vw)}
 
 /* ============================================================
    7. Секции: общий ритм
