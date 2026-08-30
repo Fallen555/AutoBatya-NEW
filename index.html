@@ -613,7 +613,7 @@ button{font:inherit;color:inherit}
 /* зарево от вывески по стене бокса */
 .light__glow{position:absolute;left:64%;top:56%;width:min(1560px,130%);aspect-ratio:2.1/1;
   transform:translate(-50%,-50%);pointer-events:none;mix-blend-mode:screen;
-  background:radial-gradient(ellipse 50% 50% at 50% 50%,rgba(255,222,36,.32),rgba(255,190,20,.1) 44%,transparent 72%);
+  background:radial-gradient(ellipse 50% 50% at 50% 50%,rgba(255,59,43,.38),rgba(255,38,24,.12) 44%,transparent 72%);
   opacity:calc(var(--lit,0) * var(--lit,0))}
 .light__in{position:relative}
 .light__head{max-width:52ch}
@@ -628,8 +628,11 @@ button{font:inherit;color:inherit}
 .neon{position:relative;width:100%}
 .neon__image{display:block;width:100%;height:auto;mix-blend-mode:screen;user-select:none}
 .neon__image--off{opacity:.34;filter:grayscale(1) brightness(.24) contrast(1.15)}
-.neon__image--lit{filter:saturate(1.1) brightness(1.04)
-  drop-shadow(0 0 5px rgba(255,229,58,.28)) drop-shadow(0 0 13px rgba(255,207,30,.18))}
+/* Кузов на картинке нарисован жёлтой трубкой. Поворот тона на -60 градусов
+   уводит жёлтое в фирменный красный, а белое остаётся белым: строки матрицы
+   hue-rotate в сумме дают единицу, поэтому серые и белые пиксели не сдвигаются. */
+.neon__image--lit{filter:hue-rotate(-60deg) saturate(1.25) brightness(1.04)
+  drop-shadow(0 0 5px rgba(255,74,58,.34)) drop-shadow(0 0 14px rgba(255,45,32,.22))}
 .neon__lit{position:absolute;inset:0;opacity:var(--lit,0);pointer-events:none;mix-blend-mode:screen}
 .neon__flick{position:absolute;inset:0}
 /* запуск вывески: трубка схватывается не с первого раза, как настоящая */
