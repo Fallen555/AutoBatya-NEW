@@ -213,7 +213,7 @@
   }
 }
 </script>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><path d='M32 3.5 56 17v30L32 60.5 8 47V17z' fill='%230D0F12' stroke='%2339414A' stroke-width='2'/><rect x='17' y='15' width='30' height='4.6' rx='2.3' fill='%23EAF2FF'/><path d='M20.5 47 32 24l11.5 23h-7l-4.5-9.6L27.5 47z' fill='%23EDEFF2'/><rect x='25.5' y='37.5' width='13' height='4.2' rx='2.1' fill='%23FF3B2B'/></svg>">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='14 21 602 602'%3E%3Cg fill='none' stroke='%23FF3B2B' stroke-width='46' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M212 76H418'/%3E%3Cpath d='M212 132H418'/%3E%3Cpath d='M302 76V544'/%3E%3Cpath d='M212 322H418'/%3E%3Cpath d='M212 544H302'/%3E%3Ccircle cx='140' cy='100' r='72'/%3E%3Ccircle cx='490' cy='100' r='72'/%3E%3Ccircle cx='140' cy='322' r='72'/%3E%3Ccircle cx='490' cy='322' r='72'/%3E%3Ccircle cx='140' cy='544' r='72'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="preload" href="assets/fonts/oswald-700.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/golos-text-400.woff2" as="font" type="font/woff2" crossorigin>
 <style>
@@ -317,8 +317,13 @@ button{font:inherit;color:inherit}
   transition:background .5s var(--ease),border-color .5s var(--ease),backdrop-filter .5s var(--ease);
   border-bottom:1px solid transparent}
 .nav.solid{background:rgba(9,11,14,.82);backdrop-filter:blur(14px);border-bottom-color:var(--line)}
-.brand{display:flex;align-items:center;gap:11px;text-decoration:none;flex:0 0 auto}
-.brand__mark{width:30px;height:30px;flex:0 0 auto}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;flex:0 0 auto}
+/* Знак мастерской. В шапке он мелкий, поэтому пиктограммы внутри кружков
+   спрятаны: на 32 пикселях они превращаются в кашу. Толщина линии задаётся
+   в единицах картинки и подбирается под каждый размер отдельно. */
+.brand__mark{width:27px;height:32px;flex:0 0 auto;color:var(--accent);overflow:visible}
+.brand__mark .mk__wires{stroke-width:36}
+.brand__mark .mk__icons{display:none}
 .brand__name{font-family:var(--display);font-weight:700;font-size:21px;letter-spacing:.06em;text-transform:uppercase}
 .nav__links{display:flex;gap:26px;margin-left:auto;align-items:baseline}
 .nav__links a{font-size:14px;text-decoration:none;color:var(--text-secondary);position:relative;padding-bottom:4px;transition:color .35s var(--ease)}
@@ -774,7 +779,13 @@ button{font:inherit;color:inherit}
 .foot{position:relative;z-index:1;border-top:1px solid var(--line);background:var(--canvas-deep);
   /* снизу оставляем место под плавающую кнопку, иначе она накрывает телефон */
   padding:44px 0 clamp(96px,12vh,124px)}
-.foot__grid{display:flex;gap:26px;flex-wrap:wrap;align-items:baseline;justify-content:space-between}
+.foot__grid{display:flex;gap:clamp(22px,4vw,44px);flex-wrap:wrap;align-items:center}
+/* в подвале места хватает, поэтому знак показан целиком, с пиктограммами */
+.foot__mark{width:88px;height:104px;flex:0 0 auto;color:var(--accent);opacity:.9}
+.foot__mark .mk__wires{stroke-width:17}
+.foot__mark .mk__icons{stroke-width:8.5}
+.foot__lines{display:flex;gap:26px;flex-wrap:wrap;align-items:baseline;
+  justify-content:space-between;flex:1 1 420px;min-width:0}
 .foot p,.foot a{font-size:14px;color:var(--text-secondary)}
 .foot a{text-decoration:none}
 .foot a:hover{color:var(--text-primary)}
@@ -879,12 +890,7 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
 
 <nav class="nav" id="nav">
   <a class="brand" href="#top">
-    <svg class="brand__mark" viewBox="0 0 64 64" aria-hidden="true">
-      <path d="M32 3.5 56 17v30L32 60.5 8 47V17z" fill="#12161B" stroke="#39414A" stroke-width="2"></path>
-      <rect x="17" y="15" width="30" height="4.6" rx="2.3" fill="#EAF2FF"></rect>
-      <path d="M20.5 47 32 24l11.5 23h-7l-4.5-9.6L27.5 47z" fill="#EDEFF2"></path>
-      <rect x="25.5" y="37.5" width="13" height="4.2" rx="2.1" fill="#FF3B2B"></rect>
-    </svg>
+    <svg class="brand__mark" viewBox="61 21 508 602" aria-hidden="true"><g class="mk__wires" fill="none" stroke="currentColor" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"><path d="M212 76H418"/><path d="M212 132H418"/><path d="M302 76V544"/><path d="M212 322H418"/><path d="M212 544H302"/><circle cx="140" cy="100" r="72"/><circle cx="490" cy="100" r="72"/><circle cx="140" cy="322" r="72"/><circle cx="490" cy="322" r="72"/><circle cx="140" cy="544" r="72"/></g><g class="mk__icons" fill="none" stroke="currentColor" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(87 47) scale(1.06)"><path d="M20 45h7V35h11V27h23v8h9v-5h8v5h5v27h-6v8H39v-8H27v-9h-7z"/><path d="M50 40v13"/><path d="M50 58.5v1.5"/></g><g transform="translate(437 47) scale(1.06)"><circle cx="50" cy="50" r="24"/><path d="M19 31a37 37 0 0 0 0 38"/><path d="M81 31a37 37 0 0 1 0 38"/><text x="50" y="58" text-anchor="middle" font-family="Oswald,'Arial Narrow',sans-serif" font-weight="700" font-size="25" fill="currentColor" stroke="none">ABS</text></g><g transform="translate(87 269) scale(1.06)"><circle cx="50" cy="50" r="25"/><path d="M50 17v9M50 74v9M17 50h9M74 50h9M26.2 26.2l6.4 6.4M67.4 67.4l6.4 6.4M73.8 26.2l-6.4 6.4M32.6 67.4l-6.4 6.4"/><path d="M35 67 57 45"/><path d="M56 32a12 12 0 1 0 12 12l-6-3-3-6z"/></g><g transform="translate(437 269) scale(1.06)"><path d="M43 55V29a7 7 0 0 1 14 0v26a11 11 0 1 1-14 0z"/><path d="M50 36v22"/><path d="M20 76q7.5-7 15 0t15 0 15 0"/><path d="M20 87q7.5-7 15 0t15 0 15 0"/></g><g transform="translate(87 491) scale(1.06)"><path d="M17 65V52h17l11-9h20v-6h11v6h6L71 65z"/><path d="M34 52v-9h11"/><path d="M82 59c-3 4-7 9-7 12.5a7 7 0 0 0 14 0C89 68 85 63 82 59z"/></g></g></svg>
     <span class="brand__name">Авто<span class="hl">Батя</span></span>
   </a>
   <div class="nav__links">
@@ -1300,9 +1306,12 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
 
 <footer class="foot">
   <div class="wrap foot__grid">
-    <p>АвтоБатя. Тверь, улица Вагжанова, 11к2</p>
-    <p>Пн-Пт 9:00 до 20:00, Сб-Вс по записи</p>
-    <p><a href="tel:+79040172588">+7 904 017-25-88</a></p>
+    <svg class="foot__mark" viewBox="61 21 508 602" aria-hidden="true"><g class="mk__wires" fill="none" stroke="currentColor" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"><path d="M212 76H418"/><path d="M212 132H418"/><path d="M302 76V544"/><path d="M212 322H418"/><path d="M212 544H302"/><circle cx="140" cy="100" r="72"/><circle cx="490" cy="100" r="72"/><circle cx="140" cy="322" r="72"/><circle cx="490" cy="322" r="72"/><circle cx="140" cy="544" r="72"/></g><g class="mk__icons" fill="none" stroke="currentColor" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(87 47) scale(1.06)"><path d="M20 45h7V35h11V27h23v8h9v-5h8v5h5v27h-6v8H39v-8H27v-9h-7z"/><path d="M50 40v13"/><path d="M50 58.5v1.5"/></g><g transform="translate(437 47) scale(1.06)"><circle cx="50" cy="50" r="24"/><path d="M19 31a37 37 0 0 0 0 38"/><path d="M81 31a37 37 0 0 1 0 38"/><text x="50" y="58" text-anchor="middle" font-family="Oswald,'Arial Narrow',sans-serif" font-weight="700" font-size="25" fill="currentColor" stroke="none">ABS</text></g><g transform="translate(87 269) scale(1.06)"><circle cx="50" cy="50" r="25"/><path d="M50 17v9M50 74v9M17 50h9M74 50h9M26.2 26.2l6.4 6.4M67.4 67.4l6.4 6.4M73.8 26.2l-6.4 6.4M32.6 67.4l-6.4 6.4"/><path d="M35 67 57 45"/><path d="M56 32a12 12 0 1 0 12 12l-6-3-3-6z"/></g><g transform="translate(437 269) scale(1.06)"><path d="M43 55V29a7 7 0 0 1 14 0v26a11 11 0 1 1-14 0z"/><path d="M50 36v22"/><path d="M20 76q7.5-7 15 0t15 0 15 0"/><path d="M20 87q7.5-7 15 0t15 0 15 0"/></g><g transform="translate(87 491) scale(1.06)"><path d="M17 65V52h17l11-9h20v-6h11v6h6L71 65z"/><path d="M34 52v-9h11"/><path d="M82 59c-3 4-7 9-7 12.5a7 7 0 0 0 14 0C89 68 85 63 82 59z"/></g></g></svg>
+    <div class="foot__lines">
+      <p>АвтоБатя. Тверь, улица Вагжанова, 11к2</p>
+      <p>Пн-Пт 9:00 до 20:00, Сб-Вс по записи</p>
+      <p><a href="tel:+79040172588">+7 904 017-25-88</a></p>
+    </div>
   </div>
 </footer>
 

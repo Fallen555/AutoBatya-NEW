@@ -27,9 +27,13 @@ body{margin:0;background:var(--canvas);color:var(--text-primary);
 
 .dochead{border-bottom:1px solid var(--line);background:var(--canvas-deep);padding:22px 0}
 .dochead__in{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
-.logo{font-family:var(--display);font-weight:700;font-size:21px;letter-spacing:.02em;
-  text-transform:uppercase;text-decoration:none;color:var(--text-primary)}
+.logo{display:flex;align-items:center;gap:12px;font-family:var(--display);font-weight:700;
+  font-size:21px;letter-spacing:.02em;text-transform:uppercase;text-decoration:none;color:var(--text-primary)}
 .logo b{color:var(--accent);font-weight:700}
+/* знак мастерской: в шапке он мелкий, пиктограммы внутри кружков спрятаны */
+.logo__mark{width:27px;height:32px;flex:0 0 auto;color:var(--accent);overflow:visible}
+.logo__mark .mk__wires{stroke-width:36}
+.logo__mark .mk__icons{display:none}
 .back{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;
   text-decoration:none;color:var(--text-secondary);border-bottom:1px solid var(--line);padding-bottom:3px}
 .back:hover,.back:focus-visible{color:var(--text-primary);border-color:var(--accent)}
