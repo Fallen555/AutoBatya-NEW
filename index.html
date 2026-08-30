@@ -610,11 +610,20 @@ button{font:inherit;color:inherit}
    ============================================================ */
 .light{position:relative;overflow:hidden;background:var(--canvas-deep);
   padding:clamp(84px,12vh,140px) 0}
-/* зарево от вывески по стене бокса */
+/* Зарево от вывески по стене бокса. Оболочка отвечает только за прокрутку:
+   её прозрачность — квадрат прогресса, поэтому до подхода секции зарева нет,
+   при движении вниз оно набирает силу, при движении вверх гаснет. Сама вспышка
+   живёт на двух слоях внутри, и их яркость перемножается с этой. */
 .light__glow{position:absolute;left:64%;top:56%;width:min(1560px,130%);aspect-ratio:2.1/1;
   transform:translate(-50%,-50%);pointer-events:none;mix-blend-mode:screen;
-  background:radial-gradient(ellipse 50% 50% at 50% 50%,rgba(255,59,43,.38),rgba(255,38,24,.12) 44%,transparent 72%);
   opacity:calc(var(--lit,0) * var(--lit,0))}
+.glow__l{position:absolute;inset:0;opacity:0;mix-blend-mode:screen}
+/* холодный ореол белых трубок — заметно теснее и слабее красного */
+.glow__l--cold{background:radial-gradient(ellipse 38% 41% at 50% 50%,
+  rgba(190,222,255,.44),rgba(124,178,255,.14) 46%,transparent 74%)}
+/* красный ореол кузова — широкий, после запуска он и остаётся основным */
+.glow__l--red{background:radial-gradient(ellipse 50% 50% at 50% 50%,
+  rgba(255,59,43,.44),rgba(255,38,24,.14) 44%,transparent 72%)}
 .light__in{position:relative}
 .light__head{max-width:52ch}
 .light h2{font-size:clamp(30px,4.2vw,54px);text-transform:uppercase;max-width:16ch}
@@ -625,89 +634,181 @@ button{font:inherit;color:inherit}
   gap:clamp(26px,4vw,60px);align-items:center}
 
 /* Сама вывеска: снизу погашенные трубки, поверх — зажжённые.
-   Зажжённая картинка разрезана на четыре выровненных слоя (см. assets/neon-*.webp):
-   белый горит ровно и никогда не мигает, а красные трубки кузова разбиты на три
-   группы и включаются по очереди. Раскладка на слои нужна именно затем, чтобы
-   мигание не задевало окна, колёса, фары и решётку. */
+   Зажжённая картинка разрезана на шесть слоёв (assets/neon-w*.webp и neon-r*.webp):
+   три белых — окна с верхом, колёса, решётка с фарами и мелочью; три красных —
+   контур с крышей и капотом, средняя линия с дверью и передком, арки с порогом
+   и бампером. Единое изображение не анимируется вовсе: каждая группа трубок
+   схватывается отдельно, поэтому белое и красное живут независимо. */
 .neon{position:relative;width:100%;
   /* Трубки кузова нарисованы жёлтым. Поворот тона на -60 градусов уводит жёлтое
      в фирменный #FF3B2B, а белое остаётся белым: строки матрицы hue-rotate в
-     сумме дают единицу, поэтому серые и белые пиксели не сдвигаются. Здесь этот
-     фильтр держат только красные слои, белого он больше не касается вовсе. */
-  --red-fx:hue-rotate(-60deg) saturate(1.32) drop-shadow(0 0 5px rgba(255,74,58,.34)) drop-shadow(0 0 14px rgba(255,45,32,.22))}
+     сумме дают единицу, поэтому серые и белые пиксели не сдвигаются. Этот фильтр
+     держат только красные слои, белого он не касается. */
+  --red-fx:hue-rotate(-60deg) saturate(1.32) drop-shadow(0 0 6px rgba(255,74,58,.42)) drop-shadow(0 0 17px rgba(255,45,32,.26));
+  /* белое свечение заметно теснее и слабее: холодный ореол должен остаться местным */
+  --white-fx:brightness(1.04) drop-shadow(0 0 4px rgba(198,226,255,.3)) drop-shadow(0 0 11px rgba(150,195,255,.17))}
 .neon__image{display:block;width:100%;height:auto;mix-blend-mode:screen;user-select:none}
 .neon__image--off{opacity:.34;filter:grayscale(1) brightness(.24) contrast(1.15)}
 .neon__lit{position:absolute;inset:0;opacity:var(--lit,0);pointer-events:none;mix-blend-mode:screen}
-/* слои лежат ровно один на другом и складываются по screen, как настоящее свечение */
-.neon__layer{position:absolute;left:0;top:0;width:100%;height:100%;display:block;user-select:none}
-.neon__layer--white{mix-blend-mode:screen;filter:brightness(1.04)
-  drop-shadow(0 0 5px rgba(198,226,255,.32)) drop-shadow(0 0 14px rgba(150,195,255,.2))}
-.neon__layer--red{filter:var(--red-fx)}
-/* Обёртка красной группы: на ней и прозрачность, и яркость свечения. Пока
-   контакт слабый, ореол почти пропадает; в момент вспышки трубка на мгновение
-   ярче рабочего режима. */
-.red-neon{position:absolute;inset:0;opacity:0;mix-blend-mode:screen}
+/* Обёртка группы: на ней и прозрачность, и яркость свечения. Пока контакт слабый,
+   ореол почти пропадает; в момент вспышки трубка ярче рабочего режима.
+   Рамки — доли холста 1140x510, поэтому обрезанные слои ложатся точно на место. */
+.tubes{position:absolute;opacity:0;mix-blend-mode:screen}
+.tubes--w1{left:16.1404%;top:12.5490%;width:57.0175%;height:50.9804%}
+.tubes--w2{left:5.0877%; top:35.6863%;width:59.2982%;height:53.7255%}
+.tubes--w3{left:57.5439%;top:36.6667%;width:38.5088%;height:50.7843%}
+.tubes--r1{left:4.9123%; top:12.3529%;width:91.3158%;height:69.2157%}
+.tubes--r2{left:13.3333%;top:32.3529%;width:72.4561%;height:28.8235%}
+.tubes--r3{left:13.8596%;top:48.8235%;width:74.4737%;height:40.1961%}
+.neon__layer{display:block;width:100%;height:100%;user-select:none}
+.tubes--w1 .neon__layer,.tubes--w2 .neon__layer,.tubes--w3 .neon__layer{filter:var(--white-fx)}
+.tubes--r1 .neon__layer,.tubes--r2 .neon__layer,.tubes--r3 .neon__layer{filter:var(--red-fx)}
 
-/* Три группы схватываются каждая по-своему: время и число попыток разное,
-   переходы почти мгновенные — это удар тока, а не плавное затухание. */
-@keyframes old-neon-a{
-  0%,3.4%    {opacity:0;   filter:brightness(.2)}
-  4%,6.6%    {opacity:1;   filter:brightness(1.38)}
-  7.2%,14.4% {opacity:.05; filter:brightness(.2)}
-  15%,18.4%  {opacity:.9;  filter:brightness(1.16)}
-  19%,28.4%  {opacity:.04; filter:brightness(.2)}
-  29%,33.6%  {opacity:1;   filter:brightness(1.42)}
-  34.2%,39.4%{opacity:.3;  filter:brightness(.52)}
-  40%,51.4%  {opacity:1;   filter:brightness(1.1)}
-  52%,56.4%  {opacity:.55; filter:brightness(.72)}
-  57%,73.4%  {opacity:1;   filter:brightness(1.04)}
-  74%,77.4%  {opacity:.8;  filter:brightness(.88)}
-  78%,100%   {opacity:1;   filter:brightness(1)}}
-@keyframes old-neon-b{
-  0%,5.4%    {opacity:0;   filter:brightness(.2)}
-  6%,9.4%    {opacity:1;   filter:brightness(1.3)}
-  10%,20.4%  {opacity:.06; filter:brightness(.2)}
-  21%,25.4%  {opacity:1;   filter:brightness(1.34)}
-  26%,30.4%  {opacity:.28; filter:brightness(.5)}
-  31%,45.4%  {opacity:1;   filter:brightness(1.08)}
-  46%,49.4%  {opacity:.62; filter:brightness(.76)}
-  50%,79.4%  {opacity:1;   filter:brightness(1.03)}
-  80%,82.4%  {opacity:.86; filter:brightness(.92)}
-  83%,100%   {opacity:1;   filter:brightness(1)}}
-@keyframes old-neon-c{
-  0%,6%      {opacity:0;   filter:brightness(.2)}
-  6.6%,9%    {opacity:1;   filter:brightness(1.44)}
-  9.6%,15.4% {opacity:.04; filter:brightness(.2)}
-  16%,18.4%  {opacity:.82; filter:brightness(1.1)}
-  19%,27.4%  {opacity:.05; filter:brightness(.2)}
-  28%,31.4%  {opacity:1;   filter:brightness(1.46)}
-  32%,37.4%  {opacity:.34; filter:brightness(.54)}
-  38%,49.4%  {opacity:1;   filter:brightness(1.12)}
-  50%,53.4%  {opacity:.16; filter:brightness(.4)}
-  54%,70.8%  {opacity:1;   filter:brightness(1.06)}
-  71.4%,74.8%{opacity:.7;  filter:brightness(.82)}
-  75.4%,90.8%{opacity:1;   filter:brightness(1.02)}
-  91.4%,92.8%{opacity:.88; filter:brightness(.94)}
-  93.4%,100% {opacity:1;   filter:brightness(1)}}
-/* Задержки 0 / 190 / 430 мс. С учётом паузы в начале каждой раскладки первые
-   вспышки приходятся на 40, 250 и 510 мс: вторая группа подхватывает через
-   210 мс после первой, третья — ещё через 260 мс. Последнее дрожание гаснет
-   на 1545 мс, то есть вся раскачка укладывается примерно в полторы секунды. */
-.neon.ignite .red-neon{animation-duration:1.02s;animation-timing-function:linear;
-  animation-iteration-count:1;animation-fill-mode:both}
-.neon.ignite .red-neon--a{animation-name:old-neon-a;animation-delay:0ms}
-.neon.ignite .red-neon--b{animation-name:old-neon-b;animation-delay:190ms;animation-duration:.98s}
-.neon.ignite .red-neon--c{animation-name:old-neon-c;animation-delay:430ms;animation-duration:1.2s}
+/* Шесть раскладок одного рисунка: тьма, короткий удар, срыв, ещё удар, срыв,
+   схватилось — дальше пара затухающих подёргиваний. Моменты переключения у всех
+   разные, чтобы группы не мигали в такт. Переходы занимают доли процента
+   длительности, то есть проходят мгновенно: это удар тока, а не затухание. */
+@keyframes neon-w1{
+  0%,4%       {opacity:0;   filter:brightness(.25)}
+  4.8%,8.6%   {opacity:.92; filter:brightness(1.2)}
+  9.4%,17%    {opacity:.08; filter:brightness(.25)}
+  17.8%,25%   {opacity:.68; filter:brightness(.95)}
+  25.8%,33%   {opacity:.12; filter:brightness(.3)}
+  33.8%,42%   {opacity:1;   filter:brightness(1.26)}
+  42.8%,48%   {opacity:.42; filter:brightness(.6)}
+  48.8%,66%   {opacity:1;   filter:brightness(1.08)}
+  66.8%,70%   {opacity:.74; filter:brightness(.86)}
+  70.8%,80%   {opacity:1;   filter:brightness(1.04)}
+  80.8%,83%   {opacity:.88; filter:brightness(.94)}
+  83.8%,100%  {opacity:1;   filter:brightness(1)}}
+@keyframes neon-w2{
+  0%,5.2%     {opacity:0;   filter:brightness(.25)}
+  6%,9.4%     {opacity:.9;  filter:brightness(1.18)}
+  10.2%,19%   {opacity:.07; filter:brightness(.25)}
+  19.8%,27.4% {opacity:.62; filter:brightness(.9)}
+  28.2%,36%   {opacity:.1;  filter:brightness(.3)}
+  36.8%,45%   {opacity:1;   filter:brightness(1.22)}
+  45.8%,51%   {opacity:.48; filter:brightness(.64)}
+  51.8%,68%   {opacity:1;   filter:brightness(1.07)}
+  68.8%,72%   {opacity:.78; filter:brightness(.88)}
+  72.8%,79%   {opacity:1;   filter:brightness(1.03)}
+  79.8%,81.4% {opacity:.9;  filter:brightness(.95)}
+  82.2%,100%  {opacity:1;   filter:brightness(1)}}
+@keyframes neon-w3{
+  0%,3.6%     {opacity:0;   filter:brightness(.25)}
+  4.4%,8%     {opacity:.94; filter:brightness(1.22)}
+  8.8%,18.4%  {opacity:.06; filter:brightness(.25)}
+  19.2%,26%   {opacity:.7;  filter:brightness(.94)}
+  26.8%,34.6% {opacity:.14; filter:brightness(.3)}
+  35.4%,44%   {opacity:1;   filter:brightness(1.25)}
+  44.8%,50%   {opacity:.4;  filter:brightness(.58)}
+  50.8%,66%   {opacity:1;   filter:brightness(1.08)}
+  66.8%,70.4% {opacity:.72; filter:brightness(.86)}
+  71.2%,78%   {opacity:1;   filter:brightness(1.03)}
+  78.8%,79.6% {opacity:.92; filter:brightness(.96)}
+  80.4%,100%  {opacity:1;   filter:brightness(1)}}
+/* красные бьются злее: и провалы глубже, и вспышки ярче рабочего режима */
+@keyframes neon-r1{
+  0%,5%       {opacity:0;   filter:brightness(.18)}
+  5.8%,9.4%   {opacity:.95; filter:brightness(1.42)}
+  10.2%,18.6% {opacity:.05; filter:brightness(.18)}
+  19.4%,26.8% {opacity:.7;  filter:brightness(1.05)}
+  27.6%,35.4% {opacity:.1;  filter:brightness(.22)}
+  36.2%,44%   {opacity:1;   filter:brightness(1.5)}
+  44.8%,50%   {opacity:.38; filter:brightness(.5)}
+  50.8%,64%   {opacity:1;   filter:brightness(1.14)}
+  64.8%,68.4% {opacity:.62; filter:brightness(.72)}
+  69.2%,78%   {opacity:1;   filter:brightness(1.06)}
+  78.8%,82.2% {opacity:.84; filter:brightness(.9)}
+  83%,100%    {opacity:1;   filter:brightness(1)}}
+@keyframes neon-r2{
+  0%,4.2%     {opacity:0;   filter:brightness(.18)}
+  5%,8.6%     {opacity:.98; filter:brightness(1.46)}
+  9.4%,17.4%  {opacity:.04; filter:brightness(.18)}
+  18.2%,24.6% {opacity:.66; filter:brightness(1)}
+  25.4%,34%   {opacity:.12; filter:brightness(.22)}
+  34.8%,43%   {opacity:1;   filter:brightness(1.52)}
+  43.8%,49.4% {opacity:.34; filter:brightness(.48)}
+  50.2%,66%   {opacity:1;   filter:brightness(1.16)}
+  66.8%,70.6% {opacity:.58; filter:brightness(.7)}
+  71.4%,80%   {opacity:1;   filter:brightness(1.05)}
+  80.8%,84%   {opacity:.86; filter:brightness(.92)}
+  84.8%,100%  {opacity:1;   filter:brightness(1)}}
+@keyframes neon-r3{
+  0%,3.4%     {opacity:0;   filter:brightness(.18)}
+  4.2%,7.8%   {opacity:1;   filter:brightness(1.48)}
+  8.6%,16.2%  {opacity:.05; filter:brightness(.18)}
+  17%,23.4%   {opacity:.74; filter:brightness(1.08)}
+  24.2%,32.6% {opacity:.09; filter:brightness(.22)}
+  33.4%,42%   {opacity:1;   filter:brightness(1.54)}
+  42.8%,48.6% {opacity:.3;  filter:brightness(.46)}
+  49.4%,64.4% {opacity:1;   filter:brightness(1.18)}
+  65.2%,69%   {opacity:.55; filter:brightness(.68)}
+  69.8%,79.4% {opacity:1;   filter:brightness(1.06)}
+  80.2%,84.4% {opacity:.88; filter:brightness(.93)}
+  85.2%,100%  {opacity:1;   filter:brightness(1)}}
+
+/* Порядок розжига. Белые: 0, 180 и 380 мс — к 910 мс весь холодный неон стоит
+   ровно. Красные подхватывают с 700, 1000 и 1300 мс, последнее дрожание гаснет
+   на 2110 мс. Вся раскачка укладывается примерно в 2,1 секунды. */
+.light.ignite .tubes{animation-timing-function:linear;animation-iteration-count:1;
+  animation-fill-mode:both}
+.light.ignite .tubes--w1{animation-name:neon-w1;animation-duration:.9s; animation-delay:0ms}
+.light.ignite .tubes--w2{animation-name:neon-w2;animation-duration:.8s; animation-delay:180ms}
+.light.ignite .tubes--w3{animation-name:neon-w3;animation-duration:.66s;animation-delay:380ms}
+.light.ignite .tubes--r1{animation-name:neon-r1;animation-duration:1.04s;animation-delay:700ms}
+.light.ignite .tubes--r2{animation-name:neon-r2;animation-duration:.99s; animation-delay:1000ms}
+.light.ignite .tubes--r3{animation-name:neon-r3;animation-duration:.95s; animation-delay:1300ms}
+
+/* Ореол идёт за трубками. Холодный вспыхивает вместе с белыми и, когда те
+   отработали, оседает до слабого местного свечения. Красный включается вместе
+   с кузовом и после запуска остаётся основным. Обе раскладки заканчиваются на
+   постоянном значении, дальше их держит fill-mode. */
+@keyframes glow-cold{
+  0%,1.8%     {opacity:0}
+  2.3%,4.1%   {opacity:.5}
+  4.5%,8.1%   {opacity:.06}
+  8.5%,11.9%  {opacity:.34}
+  12.4%,15.7% {opacity:.08}
+  16.1%,20%   {opacity:.85}
+  20.4%,22.9% {opacity:.3}
+  23.3%,31.4% {opacity:.9}
+  31.8%,33.3% {opacity:.5}
+  33.8%,43.4% {opacity:.86}
+  50%,100%    {opacity:.34}}
+@keyframes glow-red{
+  0%,3.6%     {opacity:0}
+  4.2%,6.6%   {opacity:.55}
+  7.2%,13%    {opacity:.04}
+  13.6%,18.6% {opacity:.4}
+  19.2%,24%   {opacity:.08}
+  24.6%,30%   {opacity:.78}
+  30.6%,34%   {opacity:.34}
+  34.6%,44.4% {opacity:.72}
+  45.1%,50%   {opacity:1}
+  50.6%,55%   {opacity:.42}
+  55.6%,70%   {opacity:.88}
+  70.6%,73%   {opacity:.6}
+  73.6%,88%   {opacity:.94}
+  88.6%,91%   {opacity:.78}
+  91.6%,100%  {opacity:1}}
+.light.ignite .glow__l{animation-timing-function:linear;animation-iteration-count:1;
+  animation-fill-mode:both}
+.light.ignite .glow__l--cold{animation-name:glow-cold;animation-duration:2.1s;animation-delay:0ms}
+.light.ignite .glow__l--red{animation-name:glow-red;animation-duration:1.42s;animation-delay:700ms}
 
 /* Разогревшись, трубка изредка чуть проседает — раз в полтора десятка секунд
-   и почти незаметно. Периоды у групп разные, чтобы они не совпадали. */
-@keyframes red-drift{
+   и почти незаметно. Периоды у всех групп разные, чтобы они не совпадали. */
+@keyframes tube-drift{
   0%,97.1%,100%{opacity:1}
-  97.5%{opacity:.84}  97.9%{opacity:1}
-  98.3%{opacity:.91}  98.7%{opacity:1}}
-.neon.ignite .neon__layer--red{animation:red-drift 13s linear 3s infinite}
-.neon.ignite .red-neon--b .neon__layer--red{animation-duration:17s;animation-delay:5.5s}
-.neon.ignite .red-neon--c .neon__layer--red{animation-duration:19s;animation-delay:8s}
+  97.5%{opacity:.86}  97.9%{opacity:1}
+  98.3%{opacity:.93}  98.7%{opacity:1}}
+.light.ignite .neon__layer{animation:tube-drift 14s linear 4s infinite}
+.light.ignite .tubes--w2 .neon__layer{animation-duration:16s;animation-delay:6s}
+.light.ignite .tubes--w3 .neon__layer{animation-duration:21s;animation-delay:9s}
+.light.ignite .tubes--r1 .neon__layer{animation-duration:13s;animation-delay:5s}
+.light.ignite .tubes--r2 .neon__layer{animation-duration:17s;animation-delay:7.5s}
+.light.ignite .tubes--r3 .neon__layer{animation-duration:19s;animation-delay:11s}
 
 .checks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
 .checks li{display:flex;gap:14px;align-items:baseline;padding:15px 18px;
@@ -934,9 +1035,12 @@ button{font:inherit;color:inherit}
   .reveal .part{opacity:1;transform:none}
   .svc .plate{clip-path:inset(0 0 0 0);opacity:1}
   .neon__lit{opacity:1}
-  /* анимации выключены целиком, поэтому красные группы показываем сразу зажжёнными */
-  .red-neon{opacity:1}
+  /* анимации выключены целиком, поэтому и трубки, и ореол сразу в рабочем виде:
+     красное зарево основное, холодное — слабое местное, как после запуска */
+  .tubes{opacity:1}
   .light__glow{opacity:.5}
+  .glow__l--cold{opacity:.34}
+  .glow__l--red{opacity:1}
   .checks li{transform:none}
   .price.on{background:linear-gradient(90deg,rgba(30,35,42,.92),rgba(22,26,31,0) 78%)}
   .sparks{display:none}
@@ -1251,7 +1355,13 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
 
   <!-- ===================== ЖИВОЙ МОМЕНТ: ВЫВЕСКА ===================== -->
   <section class="light" id="light">
-    <div class="light__glow" aria-hidden="true"></div>
+    <!-- Зарево по стене бокса: холодный ореол вспыхивает с белыми трубками,
+         красный подхватывает, когда загорается кузов. Общая яркость обоих
+         слоёв умножается на прогресс прокрутки. -->
+    <div class="light__glow" aria-hidden="true">
+      <span class="glow__l glow__l--cold"></span>
+      <span class="glow__l glow__l--red"></span>
+    </div>
     <div class="wrap light__in">
       <div class="light__head">
         <span class="tube tube--flick" aria-hidden="true"></span>
@@ -1267,15 +1377,19 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
           <li style="--d:0.72"><b>04</b><span>Течи и запотевания, ремни, фильтры, уровни</span></li>
         </ul>
 
-        <!-- Вывеска разложена на слои: белый горит ровно, а три красные группы
-             трубок зажигаются по очереди, как у старой придорожной вывески. -->
+        <!-- Вывеска разложена на шесть слоёв: три белых и три красных. Каждая
+             группа трубок схватывается сама по себе, поэтому мигание одной не
+             задевает соседние. Слои обрезаны по своим рамкам и расставлены
+             процентами — по сетке ложатся пиксель в пиксель. -->
         <div class="neon" id="neon" aria-hidden="true">
           <img class="neon__image neon__image--off" src="./assets/neon-tubes.webp" width="1140" height="510" alt="" decoding="async">
           <div class="neon__lit">
-            <img class="neon__layer neon__layer--white" src="./assets/neon-white.webp" width="1140" height="510" alt="" decoding="async">
-            <span class="red-neon red-neon--a"><img class="neon__layer neon__layer--red" src="./assets/neon-red-1.webp" width="1140" height="510" alt="" decoding="async"></span>
-            <span class="red-neon red-neon--b"><img class="neon__layer neon__layer--red" src="./assets/neon-red-2.webp" width="1140" height="510" alt="" decoding="async"></span>
-            <span class="red-neon red-neon--c"><img class="neon__layer neon__layer--red" src="./assets/neon-red-3.webp" width="1140" height="510" alt="" decoding="async"></span>
+            <span class="tubes tubes--w1"><img class="neon__layer" src="./assets/neon-w1.webp" width="650" height="260" alt="" decoding="async"></span>
+            <span class="tubes tubes--w2"><img class="neon__layer" src="./assets/neon-w2.webp" width="676" height="274" alt="" decoding="async"></span>
+            <span class="tubes tubes--w3"><img class="neon__layer" src="./assets/neon-w3.webp" width="439" height="259" alt="" decoding="async"></span>
+            <span class="tubes tubes--r1"><img class="neon__layer" src="./assets/neon-r1.webp" width="1041" height="353" alt="" decoding="async"></span>
+            <span class="tubes tubes--r2"><img class="neon__layer" src="./assets/neon-r2.webp" width="826" height="147" alt="" decoding="async"></span>
+            <span class="tubes tubes--r3"><img class="neon__layer" src="./assets/neon-r3.webp" width="849" height="205" alt="" decoding="async"></span>
           </div>
         </div>
       </div>

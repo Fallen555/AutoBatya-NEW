@@ -564,7 +564,6 @@
      ---------------------------------------------------------- */
   var lightSec = document.getElementById('light');
   var priceList = document.getElementById('price-list');
-  var neonSign = document.getElementById('neon');
   var lit = -1;
   var neonOn = false;
 
@@ -596,11 +595,12 @@
     }
   }
 
-  // вывеска зажигается один раз с дрожью, при обратной прокрутке взводится заново
+  // Вывеска зажигается один раз с дрожью, при обратной прокрутке взводится заново.
+  // Метку вешаем на всю секцию: по ней идут и трубки, и зарево на стене.
   function setLit(p) {
-    if (neonSign) {
-      if (!neonOn && p > 0.1) { neonOn = true; neonSign.classList.add('ignite'); }
-      else if (neonOn && p < 0.02) { neonOn = false; neonSign.classList.remove('ignite'); }
+    if (lightSec) {
+      if (!neonOn && p > 0.1) { neonOn = true; lightSec.classList.add('ignite'); }
+      else if (neonOn && p < 0.02) { neonOn = false; lightSec.classList.remove('ignite'); }
     }
     if (Math.abs(p - lit) < 0.006) return;
     lit = p;
