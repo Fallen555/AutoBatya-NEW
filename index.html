@@ -549,14 +549,13 @@ button{font:inherit;color:inherit}
     radial-gradient(circle 5px at calc(100% - 15px) 15px,#A6AEB8 0 30%,#454C55 62%,#2B313A 92%,rgba(0,0,0,0) 100%),
     radial-gradient(circle 5px at 15px calc(100% - 15px),#A6AEB8 0 30%,#454C55 62%,#2B313A 92%,rgba(0,0,0,0) 100%),
     radial-gradient(circle 5px at calc(100% - 15px) calc(100% - 15px),#A6AEB8 0 30%,#454C55 62%,#2B313A 92%,rgba(0,0,0,0) 100%)}
+/* Буквы врезаны в плиту. Трафаретной маски здесь больше нет: полосы поперёк
+   штрихов и зерно съедали половину букв, и название услуги приходилось
+   угадывать. Остался только рельеф — светлая фаска снизу, тень сверху. */
 .plate__text{position:relative;margin:0;font-family:var(--display);font-weight:700;text-transform:uppercase;
   font-size:clamp(30px,8.4vw,56px);font-size:clamp(30px,13cqw,56px);
-  line-height:1.08;letter-spacing:-.004em;color:#0F1318;
-  text-shadow:0 2px 0 rgba(255,255,255,.36),0 -1px 0 rgba(0,0,0,.85),0 3px 7px rgba(0,0,0,.35);
-  -webkit-mask-image:repeating-linear-gradient(96deg,#000 0 .52em,transparent .52em .585em),url('assets/grain-a.png');
-  mask-image:repeating-linear-gradient(96deg,#000 0 .52em,transparent .52em .585em),url('assets/grain-a.png');
-  -webkit-mask-size:auto,4em 4em;mask-size:auto,4em 4em;
-  -webkit-mask-composite:source-in;mask-composite:intersect}
+  line-height:1.08;letter-spacing:.004em;color:#0F1318;
+  text-shadow:0 1px 0 rgba(255,255,255,.34),0 -1px 0 rgba(0,0,0,.5)}
 
 .svc__text{margin-top:22px;font-size:17px;color:var(--text-primary);max-width:52ch}
 .svc__row{display:flex;gap:clamp(22px,4vw,64px);align-items:center;flex-wrap:wrap}
