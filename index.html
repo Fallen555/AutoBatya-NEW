@@ -1166,7 +1166,11 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
     <div class="static-hero__veil" aria-hidden="true"></div>
     <div class="static-hero__in">
       <p class="kicker mono chip">Тверь · Вагжанова 11к2</p>
-      <h1>Авто<span class="hl">Батя</span></h1>
+      <!-- Ключевая фраза в заголовке. Видимую часть не трогаем: крупная
+           наборная строка рассчитана на одно слово. Описатель добавлен
+           скрытой строкой — её читает голосовой доступ и учитывает поиск,
+           и это правда о странице, а не подсадка слов. -->
+      <h1>Авто<span class="hl">Батя</span><span class="sr-only">, автосервис в Твери</span></h1>
       <p>Автосервис, где всё объясняют. Сначала причина, потом ремонт.</p>
       <a class="btn btn--tel" href="tel:+79040172588">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6.6 3.8 9 8.2 6.8 10.4a12 12 0 0 0 6.8 6.8l2.2-2.2 4.4 2.4-.6 3.4a2 2 0 0 1-2.2 1.6C9.6 21.6 2.4 14.4 1.6 6.6A2 2 0 0 1 3.2 4.4z"/></svg>
