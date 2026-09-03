@@ -1004,7 +1004,7 @@ button{font:inherit;color:inherit}
   box-shadow:0 14px 34px rgba(0,0,0,.5),0 0 0 1px rgba(255,120,100,.35);
   transition:background .35s var(--ease),transform .35s var(--ease)}
 .maxbtn:hover{background:var(--accent-hover);transform:translateY(-2px)}
-.maxbtn svg{width:26px;height:26px;flex:0 0 auto}
+.maxbtn svg{width:30px;height:30px;flex:0 0 auto}
 
 /* ============================================================
    14. Адаптив
@@ -1528,9 +1528,10 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
 <!-- Написать в автосервис: переписка идёт в MAX -->
 <a class="maxbtn" href="https://max.ru/u/f9LHodD0cOKcqs8NkZ5m4z4vLB9QyGXKCh0kCnIXLWPeSl9q2ZYtQnyhSR0" target="_blank" rel="noopener"
    aria-label="Написать в MAX">
-  <!-- ВРЕМЕННЫЙ ЗНАК. Это обычный «пузырь» диалога, а не логотип MAX:
-       фирменного знака у меня нет. Заменить на настоящий, когда придёт файл. -->
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.9 8.9 0 0 1-3.8-.8L3 21l1.9-4.9A8.4 8.4 0 0 1 12 3.1a8.4 8.4 0 0 1 9 8.4z"/></svg>
+  <!-- Знак MAX: капля из большого круга и малого круга на острие, соединённых
+       общими касательными; отверстие внутри — окружность, поэтому нужно
+       правило evenodd. Цвет наследуется от кнопки, отдельной заливки нет. -->
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M 4.50 12.66 Q 4.65 15.51 5.67 17.85 A 1.50 1.50 0 0 0 7.16 19.02 Q 9.68 19.44 12.48 18.90 A 8.00 8.00 0 1 0 4.50 12.66 Z M 15.80 10.90 A 3.5 3.5 0 1 0 8.80 10.90 A 3.5 3.5 0 1 0 15.80 10.90 Z"/></svg>
 </a>
 
 <script src="assets/site.js?v=202608272230" defer></script>
