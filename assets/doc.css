@@ -30,7 +30,12 @@ body{margin:0;background:var(--canvas);color:var(--text-primary);
 .logo{display:flex;align-items:center;gap:12px;font-family:var(--display);font-weight:700;
   font-size:21px;letter-spacing:.02em;text-transform:uppercase;text-decoration:none;color:var(--text-primary)}
 .logo b{color:var(--accent);font-weight:700}
-/* знак мастерской: в шапке он мелкий, пиктограммы внутри кружков спрятаны */
+/* под названием — род занятий, чтобы страница читалась как часть сайта автосервиса */
+.logo__txt{display:flex;flex-direction:column;justify-content:center;gap:2px;min-width:0}
+.logo__name{line-height:1}
+.logo__kind{font-family:var(--mono);font-weight:400;font-size:9px;letter-spacing:.26em;
+  text-transform:uppercase;color:var(--text-secondary);line-height:1}
+/* знак автосервиса: в шапке он мелкий, пиктограммы внутри кружков спрятаны */
 .logo__mark{width:27px;height:32px;flex:0 0 auto;color:var(--accent);overflow:visible}
 .logo__mark .mk__wires{stroke-width:36}
 .logo__mark .mk__icons{display:none}
