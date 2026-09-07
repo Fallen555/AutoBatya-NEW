@@ -94,3 +94,15 @@ th{color:var(--text-secondary);font-weight:400;font-size:15px}
   a{color:#000;text-decoration-color:#999}
   .fill{background:#fff;color:#000;border:1px dashed #000}
 }
+
+/* Читаемость при увеличении текста и при печати. */
+h1,h2,h3,dd{overflow-wrap:anywhere}
+:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+@media print{
+ :root{--text-primary:#000;--text-secondary:#222}
+ body,strong,h1,h2,h3,p,li,dt,dd,th,td,.sub,.note,a{color:#000!important;text-shadow:none!important}
+ .note{border-color:#666}
+ .tablewrap{overflow:visible}.tablewrap table{min-width:0}
+ h1,h2,h3{break-after:avoid}
+ p,li{orphans:3;widows:3}
+}
