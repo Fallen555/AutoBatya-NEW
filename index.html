@@ -2,6 +2,8 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; frame-src https://yandex.ru https://yandex.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>АвтоБатя, автосервис в Твери на Вагжанова 11к2</title>
 <meta name="description" content="Комплексная диагностика, ремонт узлов и агрегатов, подбор автозапчастей. Смету согласуем до начала работ, снятые детали покажем. Тверь, улица Вагжанова 11к2.">
@@ -33,7 +35,7 @@
   "url": "https://fallen555.github.io/AutoBatya-NEW/",
   "image": "https://fallen555.github.io/AutoBatya-NEW/assets/hero-still.jpg",
   "telephone": "+79040172588",
-  "priceRange": "от 600 ₽",
+  "priceRange": "от 500 ₽",
   "currenciesAccepted": "RUB",
   "address": {
     "@type": "PostalAddress",
@@ -263,7 +265,7 @@ body{
   margin:0;background:var(--canvas);color:var(--text-primary);
   font-family:var(--body);font-weight:400;font-size:17px;line-height:1.6;
   -webkit-font-smoothing:antialiased;
-  animation:pageIn 1s var(--ease) both;
+  opacity:1;
 }
 @keyframes pageIn{from{opacity:0}to{opacity:1}}
 h1,h2,h3{font-family:var(--display);font-weight:700;line-height:1.02;margin:0;letter-spacing:.005em}
@@ -358,7 +360,9 @@ button{font:inherit;color:inherit}
 /* ============================================================
    4. Герой: сцена, видео, кольцо загрузки
    ============================================================ */
-.hero{position:relative;z-index:1;height:640vh}
+.hero{display:none;position:relative;z-index:1;height:400vh}
+.scrub-enabled .hero{display:block}
+.scrub-enabled .static-hero{display:none}
 .stage{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden;background:var(--canvas-deep)}
 .stage__media{position:absolute;inset:0}
 .poster{position:absolute;inset:0;background-size:cover;background-position:50% 50%;
@@ -475,7 +479,7 @@ button{font:inherit;color:inherit}
 /* ============================================================
    6. Статичный герой (телефоны, «меньше движения»)
    ============================================================ */
-.static-hero{display:none;position:relative;min-height:100svh;
+.static-hero{display:flex;position:relative;min-height:100vh;min-height:100svh;
   background:var(--canvas-deep);
   align-items:flex-end;padding:96px var(--pad) 48px}
 /* фон подгружается только когда блок показан, у скрытого блока картинка не качается */
@@ -512,7 +516,7 @@ button{font:inherit;color:inherit}
 @keyframes breathe{0%,100%{opacity:.72}50%{opacity:1}}
 
 /* появление секций */
-.reveal .part{opacity:0;transform:translateY(24px);
+.reveal .part{opacity:1;transform:none;
   transition:opacity .8s var(--ease),transform .8s var(--ease)}
 .reveal.in .part{opacity:1;transform:none}
 .reveal.in .part:nth-child(2){transition-delay:.08s}
@@ -565,7 +569,7 @@ button{font:inherit;color:inherit}
   border:1px solid var(--line);border-radius:2px;padding:7px 11px}
 
 /* плита открывается при прокрутке */
-.svc .plate{clip-path:inset(0 100% 0 0);opacity:0;
+.svc .plate{clip-path:inset(0 0 0 0);opacity:1;
   transition:clip-path 1.05s var(--ease-soft),opacity .5s var(--ease)}
 .svc.in .plate{clip-path:inset(0 0 0 0);opacity:1}
 .svc.in:nth-of-type(2) .plate{transition-delay:.06s}
@@ -896,97 +900,6 @@ button{font:inherit;color:inherit}
 
 
 /* ============================================================
-   11б. Мини-карта: наклон за мышкой, разворот по клику
-   ============================================================ */
-.minimap{margin-top:34px;perspective:1000px;width:100%;max-width:420px}
-.minimap__card{position:relative;overflow:hidden;border-radius:16px;
-  width:min(300px,100%);height:170px;max-width:100%;
-  background:linear-gradient(160deg,#151A20,#0E1216);
-  border:1px solid var(--line);
-  transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));
-  transform-style:preserve-3d;
-  transition:width .55s var(--ease-soft),height .55s var(--ease-soft),
-             transform .35s var(--ease),border-color .4s var(--ease),box-shadow .5s var(--ease);
-  box-shadow:0 18px 40px rgba(0,0,0,.45)}
-.minimap:hover .minimap__card{border-color:var(--neon-dim)}
-.minimap.open .minimap__card{width:min(420px,100%);height:320px;
-  box-shadow:0 26px 60px rgba(0,0,0,.55),0 0 40px rgba(130,185,255,.12)}
-
-.minimap__grid{position:absolute;inset:0;opacity:.05;
-  background-image:linear-gradient(var(--neon) 1px,transparent 1px),linear-gradient(90deg,var(--neon) 1px,transparent 1px);
-  background-size:22px 22px;transition:opacity .4s var(--ease)}
-.minimap.open .minimap__grid{opacity:0}
-
-.minimap__streets{position:absolute;inset:0;width:100%;height:100%;opacity:0;
-  transition:opacity .45s var(--ease)}
-.minimap.open .minimap__streets{opacity:1}
-.minimap__streets line{stroke-linecap:square;stroke-dasharray:1;stroke-dashoffset:1;
-  transition:stroke-dashoffset .9s var(--ease-soft)}
-.minimap.open .minimap__streets line{stroke-dashoffset:0}
-.minimap__streets .road{stroke:rgba(234,242,255,.26)}
-.minimap__streets .road--main{stroke:rgba(234,242,255,.34)}
-.minimap__streets .lane{stroke:rgba(234,242,255,.1)}
-.minimap__streets text{font-family:var(--mono);font-size:9px;letter-spacing:.16em;
-  fill:rgba(234,242,255,.42);opacity:0;transition:opacity .4s var(--ease) .5s}
-.minimap.open .minimap__streets text{opacity:1}
-
-.minimap__blocks{position:absolute;inset:0;pointer-events:none}
-.minimap__blocks i{position:absolute;display:block;border-radius:2px;
-  left:var(--x);top:var(--y);width:var(--w);height:var(--h);
-  background:rgba(154,161,170,.16);border:1px solid rgba(154,161,170,.14);
-  opacity:0;transform:scale(.86);
-  transition:opacity .4s var(--ease),transform .4s var(--ease)}
-.minimap.open .minimap__blocks i{opacity:1;transform:none;transition-delay:var(--d,0s)}
-.minimap__blocks i.here{background:rgba(255,59,43,.16);border-color:rgba(255,59,43,.4)}
-
-.minimap__pin{position:absolute;left:50%;top:47%;width:30px;height:30px;margin:-30px 0 0 -15px;
-  opacity:0;transform:translateY(-14px) scale(.6);
-  transition:opacity .35s var(--ease),transform .5s cubic-bezier(.2,1.5,.4,1)}
-.minimap.open .minimap__pin{opacity:1;transform:none;transition-delay:.24s}
-.minimap__pin circle.pulse{transform-origin:12px 9px;animation:pinPulse 2.6s var(--ease-soft) infinite}
-@keyframes pinPulse{0%,100%{opacity:.35;transform:scale(1)}50%{opacity:0;transform:scale(2.4)}}
-
-.minimap__top{position:absolute;left:16px;right:16px;top:14px;display:flex;align-items:center;justify-content:space-between;z-index:4}
-.minimap__icon{width:18px;height:18px;color:var(--accent);opacity:1;transition:opacity .3s var(--ease)}
-.minimap.open .minimap__icon{opacity:0}
-.minimap.open .minimap__chip{opacity:0;pointer-events:none}
-.minimap__chip{transition:opacity .25s var(--ease);display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border-radius:999px;
-  background:rgba(234,242,255,.06);backdrop-filter:blur(8px);
-  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-secondary);
-  transition:background .3s var(--ease)}
-.minimap:hover .minimap__chip{background:rgba(234,242,255,.1)}
-.minimap__chip i{width:6px;height:6px;border-radius:50%;background:var(--accent);
-  box-shadow:0 0 8px rgba(255,59,43,.8)}
-
-.minimap__bottom{position:absolute;left:16px;right:16px;bottom:14px;z-index:4}
-.minimap__title{font-family:var(--display);font-weight:700;text-transform:uppercase;letter-spacing:.02em;
-  font-size:16px;color:var(--text-primary);transition:transform .4s var(--ease);
-  text-shadow:0 1px 8px rgba(5,8,12,.8)}
-.minimap:hover .minimap__title{transform:translateX(4px)}
-.minimap__coords{font-family:var(--mono);font-size:11px;color:var(--text-secondary);
-  max-height:0;opacity:0;overflow:hidden;transition:max-height .3s var(--ease),opacity .3s var(--ease),margin .3s var(--ease)}
-.minimap.open .minimap__coords{max-height:20px;opacity:1;margin-top:5px}
-.minimap__rule{display:block;height:1px;margin-top:9px;
-  background:linear-gradient(90deg,rgba(255,59,43,.7),rgba(255,59,43,.25),transparent);
-  transform:scaleX(.3);transform-origin:left;transition:transform .45s var(--ease)}
-.minimap:hover .minimap__rule,.minimap.open .minimap__rule{transform:scaleX(1)}
-
-.minimap__toggle{position:absolute;inset:0;z-index:5;border:0;background:transparent;cursor:pointer;padding:0}
-.minimap__link{position:absolute;right:14px;top:12px;z-index:6;
-  font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--text-primary);text-decoration:none;padding:8px 12px;border-radius:2px;
-  background:rgba(10,13,16,.72);border:1px solid var(--neon-dim);backdrop-filter:blur(8px);
-  opacity:0;pointer-events:none;transform:translateY(6px);
-  transition:opacity .3s var(--ease),transform .3s var(--ease),background .3s var(--ease)}
-.minimap.open .minimap__link{opacity:1;pointer-events:auto;transform:none;transition-delay:.3s}
-.minimap__link:hover{background:rgba(255,59,43,.18);border-color:var(--accent)}
-/* подпись мелкая и моноширинная, поэтому берём цвет ярче обычного
-   второстепенного текста: иначе тонкие штрихи тонут в тёмном фоне */
-.minimap__hint{display:block;margin-top:10px;font-family:var(--mono);font-size:12px;letter-spacing:.08em;
-  color:#C6CDD6}
-@media (pointer:coarse){.minimap__card{width:100%}.minimap{width:100%}}
-
-/* ============================================================
    12. Подвал
    ============================================================ */
 .foot{position:relative;z-index:1;border-top:1px solid var(--line);background:var(--canvas-deep);
@@ -1016,8 +929,8 @@ button{font:inherit;color:inherit}
        (orientation:portrait) and (pointer:coarse),
        (orientation:landscape) and (pointer:coarse) and (max-height:560px),
        (prefers-reduced-motion:reduce){
-  .hero{display:none}
-  .static-hero{display:flex}
+  .scrub-enabled .hero{display:none}
+  .scrub-enabled .static-hero{display:flex}
 }
 
 /* мелкие накладки прячем на низких экранах */
@@ -1086,12 +999,68 @@ button{font:inherit;color:inherit}
   .checks li{transform:none}
   .price.on{background:linear-gradient(90deg,rgba(30,35,42,.92),rgba(22,26,31,0) 78%)}
   .sparks{display:none}
-  .minimap__card{transform:none}
   .wire .wire__lit{stroke-dashoffset:0}
 }
 body.paused *,body.paused *::before,body.paused *::after{animation-play-state:paused!important}
 /* мерцание останавливается, когда лампа ушла с экрана */
 .tube.off::after,.lamp.off::after{animation-play-state:paused}
+
+/* Проверка 07.09.2026: контент доступен до запуска JavaScript. */
+html{scroll-padding-top:88px}
+[hidden]{display:none!important}
+.mobile-menu{display:none}
+.static-hero .hero-hours{max-width:none;font-size:14px;margin-top:16px}
+
+.guarantee-note{margin-top:22px}
+.foot{padding-bottom:max(96px,env(safe-area-inset-bottom))}
+.maxbtn{bottom:max(20px,env(safe-area-inset-bottom))}
+.effects-off *,.effects-off *::before,.effects-off *::after{animation:none!important;transition:none!important}
+html.effects-off{scroll-behavior:auto}
+.effects-off .sparks{display:none}
+@media(max-width:1000px){
+ .maxbtn{display:none}
+ .nav{padding:12px;gap:8px}
+ .nav__links{display:none}
+ .nav__call{margin-left:auto;padding:12px 10px;font-size:11px;letter-spacing:.03em;flex-shrink:0}
+ .brand{gap:8px}.brand__name{font-size:19px}.brand__kind{font-size:8px}.brand__mark{width:22px;height:28px}
+ .mobile-menu{display:block;flex:0 0 auto}
+ .mobile-menu summary{cursor:pointer;min-height:44px;display:flex;align-items:center;padding:10px 6px;border:1px solid var(--line);border-radius:3px;font-size:14px;list-style:none}
+ .mobile-menu summary::-webkit-details-marker{display:none}
+ .mobile-menu[open] summary{border-color:var(--accent)}
+ .mobile-menu__links{position:absolute;left:12px;right:12px;top:calc(100% + 4px);display:grid;grid-template-columns:1fr 1fr;gap:4px;background:#0D0F12;border:1px solid #9AA1AA;border-radius:6px;padding:8px;box-shadow:0 12px 30px #0008}
+ .mobile-menu__links a{min-height:48px;padding:12px;text-decoration:none}
+ .mobile-menu__links a:hover{background:var(--panel)}
+ .static-hero{padding-top:100px}
+ .plate__text{overflow-wrap:normal;word-break:normal}
+}
+@media(max-width:360px){.brand__name{font-size:17px}.brand__kind{font-size:7px}.brand{gap:6px}.nav{gap:6px}.nav__call{gap:6px;padding:12px 8px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+
+/* Адрес и настоящая карта: независимая ссылка на маршрут доступна при отказе виджета. */
+.contacts__lede{max-width:680px}
+.maxbtn[hidden]{display:none!important}
+.visit-layout{display:grid;grid-template-columns:340px minmax(0,1fr);margin-top:30px;border:1px solid #34363b;border-radius:16px;overflow:hidden;background:#191c21}
+.visit-details{padding:30px;display:flex;flex-direction:column;min-width:0}
+.visit-tag{color:#ff8074;font:11px/1.5 var(--mono);letter-spacing:2px;text-transform:uppercase;margin-bottom:15px}
+.visit-address{font:650 26px/1.3 var(--body);letter-spacing:-.5px;margin:0}
+.visit-city{color:#b2b7bf;margin:5px 0 26px}
+.visit-hours{border-top:1px solid #36383e;border-bottom:1px solid #36383e;padding:18px 0;display:flex;justify-content:space-between;gap:10px;font-size:14px}
+.visit-hours strong{font-weight:600}.visit-hours span{color:#b2b7bf}
+.visit-route{display:flex;align-items:center;justify-content:center;gap:12px;text-decoration:none;background:#c92f21;color:#fff;font-weight:650;min-height:52px;padding:15px 12px;border-radius:7px;margin:24px 0 10px}
+.visit-route:hover{background:#b8271b}.visit-route svg{width:19px;height:19px;flex-shrink:0}
+.visit-source{display:flex;align-items:center;justify-content:center;min-height:44px;text-align:center;color:#c6cbd2;font-size:13px;text-underline-offset:3px}
+.visit-help{margin:20px 0 0;color:#b2b7bf;font-size:14px}
+.visit-phone{display:inline-flex;align-items:center;min-height:44px;margin-top:5px;font-size:20px;font-weight:650;text-decoration:none;color:#edeff2}
+.visit-map-area{min-width:0;background:#e8e9eb;display:flex;flex-direction:column}
+.visit-map-area iframe{display:block;width:100%;height:400px;flex:1;min-height:400px;border:0;background:#e8e9eb}
+.visit-map-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#202329;color:#bac0c9;font-size:12px;padding:5px 18px}
+.visit-map-foot a{display:inline-flex;align-items:center;min-height:44px;white-space:nowrap;text-underline-offset:3px}
+.guarantee-note{font-size:13px;color:#b2b7bf;margin-top:18px}
+@media(max-width:800px){.visit-layout{grid-template-columns:1fr}.visit-details{padding:24px}.visit-map-area iframe{height:340px;min-height:340px}.visit-map-foot{flex-wrap:wrap;gap:0 12px}.visit-help{margin-top:20px}}
+@media(max-width:380px){.visit-details{padding:20px}.visit-address{font-size:24px}.visit-hours{font-size:13px}.visit-route{font-size:15px}}
+@media print{.visit-layout{display:block;border-color:#888;background:white;color:black}.visit-map-area{display:none}.visit-details{padding:18px}.visit-details p,.visit-details a,.visit-hours span,.guarantee-note{color:black}.visit-route{background:transparent;border:1px solid #888}}
+
 </style>
 </head>
 <body>
@@ -1106,7 +1075,7 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
   <div class="env__grain"></div>
 </div>
 
-<nav class="nav" id="nav">
+<nav class="nav" id="nav" aria-label="Основная навигация">
   <a class="brand" href="#top">
     <svg class="brand__mark" viewBox="61 21 508 602" aria-hidden="true"><g class="mk__wires" fill="none" stroke="currentColor" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"><path d="M212 76H418"/><path d="M212 132H418"/><path d="M302 76V544"/><path d="M212 322H418"/><path d="M212 544H302"/><circle cx="140" cy="100" r="72"/><circle cx="490" cy="100" r="72"/><circle cx="140" cy="322" r="72"/><circle cx="490" cy="322" r="72"/><circle cx="140" cy="544" r="72"/></g><g class="mk__icons" fill="none" stroke="currentColor" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(87 47) scale(1.06)"><path d="M20 45h7V35h11V27h23v8h9v-5h8v5h5v27h-6v8H39v-8H27v-9h-7z"/><path d="M50 40v13"/><path d="M50 58.5v1.5"/></g><g transform="translate(437 47) scale(1.06)"><circle cx="50" cy="50" r="24"/><path d="M19 31a37 37 0 0 0 0 38"/><path d="M81 31a37 37 0 0 1 0 38"/><text x="50" y="58" text-anchor="middle" font-family="Oswald,'Arial Narrow',sans-serif" font-weight="700" font-size="25" fill="currentColor" stroke="none">ABS</text></g><g transform="translate(87 269) scale(1.06)"><circle cx="50" cy="50" r="25"/><path d="M50 17v9M50 74v9M17 50h9M74 50h9M26.2 26.2l6.4 6.4M67.4 67.4l6.4 6.4M73.8 26.2l-6.4 6.4M32.6 67.4l-6.4 6.4"/><path d="M35 67 57 45"/><path d="M56 32a12 12 0 1 0 12 12l-6-3-3-6z"/></g><g transform="translate(437 269) scale(1.06)"><path d="M43 55V29a7 7 0 0 1 14 0v26a11 11 0 1 1-14 0z"/><path d="M50 36v22"/><path d="M20 76q7.5-7 15 0t15 0 15 0"/><path d="M20 87q7.5-7 15 0t15 0 15 0"/></g><g transform="translate(87 491) scale(1.06)"><path d="M17 65V52h17l11-9h20v-6h11v6h6L71 65z"/><path d="M34 52v-9h11"/><path d="M82 59c-3 4-7 9-7 12.5a7 7 0 0 0 14 0C89 68 85 63 82 59z"/></g></g></svg>
     <span class="brand__txt">
@@ -1121,10 +1090,18 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
     <a href="#reviews">Отзывы</a>
     <a href="#contacts">Контакты</a>
   </div>
-  <a class="btn nav__call" href="tel:+79040172588">
+  <a class="btn nav__call" href="tel:+79040172588" aria-label="Позвонить: +7 904 017-25-88">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6.6 3.8 9 8.2 6.8 10.4a12 12 0 0 0 6.8 6.8l2.2-2.2 4.4 2.4-.6 3.4a2 2 0 0 1-2.2 1.6C9.6 21.6 2.4 14.4 1.6 6.6A2 2 0 0 1 3.2 4.4z"/></svg>
-    Позвонить
+    Звонок
   </a>
+  <details class="mobile-menu">
+    <summary>Меню</summary>
+    <div class="mobile-menu__links">
+      <a href="#services">Услуги</a><a href="#prices">Цены</a>
+      <a href="#process">Как работаем</a><a href="#reviews">Отзывы</a>
+      <a href="#contacts">Контакты</a><a href="https://max.ru/u/f9LHodD0cOKcqs8NkZ5m4z4vLB9QyGXKCh0kCnIXLWPeSl9q2ZYtQnyhSR0" target="_blank" rel="noopener noreferrer">Написать в MAX</a>
+    </div>
+  </details>
 </nav>
 
 <main id="main" tabindex="-1">
@@ -1208,6 +1185,7 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6.6 3.8 9 8.2 6.8 10.4a12 12 0 0 0 6.8 6.8l2.2-2.2 4.4 2.4-.6 3.4a2 2 0 0 1-2.2 1.6C9.6 21.6 2.4 14.4 1.6 6.6A2 2 0 0 1 3.2 4.4z"/></svg>
         +7 904 017-25-88
       </a>
+      <p class="hero-hours">Пн–Пт 9:00–18:00 · Сб–Вс выходной</p>
     </div>
   </section>
 
@@ -1351,7 +1329,7 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
           </li>
       </ul>
 
-      <p class="price-foot">Не нашли свою работу в списке? Позвоните, посчитаем по вашей машине.</p>
+      <p class="price-foot">Не нашли свою работу в списке? <a href="tel:+79040172588">Позвоните, посчитаем по вашей машине.</a></p>
     </div>
   </section>
 
@@ -1528,16 +1506,12 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
   </section>
 
   <!-- ===================== КОНТАКТЫ ===================== -->
-  <section class="sec contacts" id="contacts">
+  <section class="sec contacts" id="contacts" aria-labelledby="contacts-title">
     <div class="wrap">
-      <div class="contacts__grid">
-        <div class="reveal">
-          <div class="part">
-            <span class="tube" aria-hidden="true"></span>
-            <h2>Приезжайте, разберёмся</h2>
-          </div>
-          <p class="contacts__lede part">Позвоните и коротко опишите, что с машиной. Скажем, что это может быть и сколько времени займёт.</p>
-          <div class="contacts__cta part">
+      <span class="tube" aria-hidden="true"></span>
+      <h2 id="contacts-title">Приезжайте, разберёмся</h2>
+      <p class="contacts__lede">Позвоните перед поездкой — согласуем удобное время и обсудим, что нужно вашей машине.</p>
+      <div class="contacts__cta">
             <a class="btn" href="tel:+79040172588">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6.6 3.8 9 8.2 6.8 10.4a12 12 0 0 0 6.8 6.8l2.2-2.2 4.4 2.4-.6 3.4a2 2 0 0 1-2.2 1.6C9.6 21.6 2.4 14.4 1.6 6.6A2 2 0 0 1 3.2 4.4z"/></svg>
               Позвонить
@@ -1547,81 +1521,15 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
               Написать в MAX
             </a>
           </div>
-
-          <div class="minimap" id="minimap">
-            <div class="minimap__card">
-              <span class="minimap__grid" aria-hidden="true"></span>
-
-              <svg class="minimap__streets" viewBox="0 0 420 320" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-                <line class="road road--main" pathLength="1" x1="0" y1="205" x2="420" y2="205" stroke-width="13" style="transition-delay:.05s"></line>
-                <line class="road" pathLength="1" x1="0" y1="92" x2="420" y2="92" stroke-width="9" style="transition-delay:.12s"></line>
-                <line class="road" pathLength="1" x1="126" y1="0" x2="126" y2="320" stroke-width="9" style="transition-delay:.2s"></line>
-                <line class="road" pathLength="1" x1="312" y1="0" x2="312" y2="320" stroke-width="7" style="transition-delay:.28s"></line>
-                <line class="lane" pathLength="1" x1="0" y1="150" x2="420" y2="150" stroke-width="2" style="transition-delay:.34s"></line>
-                <line class="lane" pathLength="1" x1="0" y1="268" x2="420" y2="268" stroke-width="2" style="transition-delay:.4s"></line>
-                <line class="lane" pathLength="1" x1="60" y1="0" x2="60" y2="320" stroke-width="2" style="transition-delay:.46s"></line>
-                <line class="lane" pathLength="1" x1="220" y1="92" x2="220" y2="320" stroke-width="2" style="transition-delay:.52s"></line>
-                <line class="lane" pathLength="1" x1="380" y1="0" x2="380" y2="205" stroke-width="2" style="transition-delay:.58s"></line>
-                <text x="146" y="200">УЛ. ВАГЖАНОВА</text>
-                <text x="146" y="86">11К2</text>
-              </svg>
-
-              <span class="minimap__blocks" aria-hidden="true">
-          <i class="" style="--x:6%;--y:14%;--w:18%;--h:16%;--d:0.30s"></i>
-          <i class="" style="--x:30%;--y:8%;--w:14%;--h:12%;--d:0.36s"></i>
-          <i class="" style="--x:62%;--y:16%;--w:20%;--h:14%;--d:0.42s"></i>
-          <i class="" style="--x:8%;--y:62%;--w:16%;--h:20%;--d:0.48s"></i>
-          <i class="" style="--x:70%;--y:64%;--w:22%;--h:22%;--d:0.54s"></i>
-          <i class="here" style="--x:40%;--y:40%;--w:16%;--h:14%;--d:0.20s"></i>
-              </span>
-
-              <svg class="minimap__pin" viewBox="0 0 24 24" aria-hidden="true">
-                <circle class="pulse" cx="12" cy="9" r="5" fill="#FF3B2B"></circle>
-                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#FF3B2B"></path>
-                <circle cx="12" cy="9" r="2.6" fill="#0D0F12"></circle>
-              </svg>
-
-              <div class="minimap__top">
-                <svg class="minimap__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon>
-                  <line x1="9" x2="9" y1="3" y2="18"></line>
-                  <line x1="15" x2="15" y1="6" y2="21"></line>
-                </svg>
-                <span class="minimap__chip"><i aria-hidden="true"></i>Мы здесь</span>
-              </div>
-
-              <div class="minimap__bottom">
-                <p class="minimap__title">Тверь, Вагжанова 11к2</p>
-                <p class="minimap__coords">56.8531 с. ш., 35.9353 в. д.</p>
-                <span class="minimap__rule" aria-hidden="true"></span>
-              </div>
-
-              <button class="minimap__toggle" type="button" aria-expanded="false" aria-controls="minimap">
-                <span class="sr-only">Развернуть карту проезда</span>
-              </button>
-              <a class="minimap__link" href="https://yandex.ru/maps/org/avtobatya/18764866231/?ll=35.935272%2C56.853131&amp;z=18" target="_blank" rel="noopener" tabindex="-1">Открыть в Яндекс Картах</a>
-            </div>
-            <span class="minimap__hint" id="minimap-hint">Нажмите на карту, чтобы развернуть</span>
-          </div>
-        </div>
-
-        <div class="info">
-          <div class="info__row">
-            <p class="info__k">Телефон</p>
-            <p class="info__v"><a class="phone-big" href="tel:+79040172588">+7 904 017-25-88</a></p>
-          </div>
-          <div class="info__row">
-            <p class="info__k">Адрес</p>
-            <p class="info__v"><a href="https://yandex.ru/maps/org/avtobatya/18764866231/?ll=35.935272%2C56.853131&amp;z=18" target="_blank" rel="noopener">г. Тверь, улица Вагжанова, 11к2</a></p>
-          </div>
-          <div class="info__row">
-            <p class="info__k">Время работы</p>
-            <p class="info__v">Пн-Пт: 9:00 до 18:00</p>
-            <p class="info__small">Сб-Вс: выходной</p>
-          </div>
-        </div>
-      </div>
+      <section class="visit-layout" aria-label="Адрес автосервиса и карта">
+<div class="visit-details"><div class="visit-tag">Как нас найти</div><h3 class="visit-address">Вагжанова, 11к2</h3><p class="visit-city">Тверь</p>
+<div class="visit-hours"><div><strong>Пн–Пт</strong><br><span>09:00–18:00</span></div><div><strong>Сб–Вс</strong><br><span>Выходной</span></div></div>
+<a class="visit-route" href="https://yandex.ru/maps/?rtext=~56.853115%2C35.934884&amp;rtt=auto" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m21 3-7 18-3-8-8-3Z"/><path d="m11 13 10-10"/></svg>Построить маршрут</a>
+<a class="visit-source" href="https://yandex.ru/maps/org/avtobatya/18764866231/" target="_blank" rel="noopener noreferrer">Открыть в Яндекс Картах ↗</a>
+<p class="visit-help">Не можете найти въезд?<br>Позвоните — подскажем.<br><a class="visit-phone" href="tel:+79040172588">+7 904 017-25-88</a></p></div>
+<div class="visit-map-area"><iframe title="АвтоБатя на Яндекс Картах, Тверь, Вагжанова 11к2" src="https://yandex.ru/map-widget/v1/?ll=35.934884%2C56.853115&amp;z=17&amp;pt=35.934884%2C56.853115%2Cpm2rdm" loading="lazy" allowfullscreen></iframe><div class="visit-map-foot"><span>Тверь · улица Вагжанова, 11к2</span><a href="https://yandex.ru/maps/org/avtobatya/18764866231/" target="_blank" rel="noopener noreferrer">Развернуть карту ↗</a></div></div>
+</section>
+      <p class="guarantee-note">Перед визитом позвоните для записи. Условия гарантии предоставляются на месте в автосервисе.</p>
     </div>
   </section>
 </main>
@@ -1643,8 +1551,8 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
 
 
 <!-- Написать в автосервис: переписка идёт в MAX -->
-<a class="maxbtn" href="https://max.ru/u/f9LHodD0cOKcqs8NkZ5m4z4vLB9QyGXKCh0kCnIXLWPeSl9q2ZYtQnyhSR0" target="_blank" rel="noopener"
-   aria-label="Написать в MAX">
+<a class="maxbtn" hidden href="https://max.ru/u/f9LHodD0cOKcqs8NkZ5m4z4vLB9QyGXKCh0kCnIXLWPeSl9q2ZYtQnyhSR0" target="_blank" rel="noopener"
+   aria-label="Написать в MAX" title="Написать в MAX">
   <!-- Знак MAX, снят с присланного образца. Обе формы — и внешняя, и отверстие —
        строятся одинаково: большой круг и малый круг на пятке, соединённые общими
        внешними касательными, поэтому кромка гладкая, а пятка скругляется сама.
@@ -1653,6 +1561,6 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
   <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M 2.48 13.24 Q 2.26 17.62 3.51 21.15 A 0.77 0.77 0 0 0 4.29 21.82 Q 8.28 21.71 12.27 21.60 A 9.60 9.60 0 1 0 2.48 13.24 Z M 6.62 12.60 Q 6.96 15.11 7.30 17.62 A 0.19 0.19 0 0 0 7.50 17.79 Q 10.03 17.69 12.56 17.59 A 5.76 5.76 0 1 0 6.62 12.60 Z"/></svg>
 </a>
 
-<script src="assets/site.js?v=202608272230" defer></script>
+<script src="assets/site.js?v=20260907-audit1" defer></script>
 </body>
 </html>
