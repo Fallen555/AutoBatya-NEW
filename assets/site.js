@@ -31,14 +31,6 @@
   var resumeFrames = function () {};
   var denseRequested = false;
   function motionReduced() { return reduceQuery.matches; }
-  // В контактах уже есть MAX: плавающая ссылка не должна закрывать карту.
-  var contactSection = document.getElementById('contacts');
-  var floatingMax = document.querySelector('.maxbtn');
-  if (contactSection && floatingMax && 'IntersectionObserver' in window) {
-    new IntersectionObserver(function (entries) {
-      floatingMax.hidden = entries[0].isIntersecting;
-    }).observe(contactSection);
-  }
   function saveTraffic() { return !!(connection && (connection.saveData || /^(slow-)?2g$/.test(connection.effectiveType || ''))); }
   function syncMotionPreference() {
     document.documentElement.classList.toggle('effects-off', motionReduced());
