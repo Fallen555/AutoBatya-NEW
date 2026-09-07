@@ -27,6 +27,22 @@
     return function () { return (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; };
   }
   var reduceQuery = matchMedia('(prefers-reduced-motion: reduce)');
+  var connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  var resumeFrames = function () {};
+  var denseRequested = false;
+  function motionReduced() { return reduceQuery.matches; }
+  // В контактах уже есть MAX: плавающая ссылка не должна закрывать карту.
+  var contactSection = document.getElementById('contacts');
+  var floatingMax = document.querySelector('.maxbtn');
+  if (contactSection && floatingMax && 'IntersectionObserver' in window) {
+    new IntersectionObserver(function (entries) {
+      floatingMax.hidden = entries[0].isIntersecting;
+    }).observe(contactSection);
+  }
+  function saveTraffic() { return !!(connection && (connection.saveData || /^(slow-)?2g$/.test(connection.effectiveType || ''))); }
+  function syncMotionPreference() {
+    document.documentElement.classList.toggle('effects-off', motionReduced());
+  }
 
   /* ----------------------------------------------------------
      1. Разбор заголовков на слова и буквы
@@ -131,6 +147,8 @@
       var ramp = parseFloat(el.getAttribute('data-ramp') || '0') || Math.min(0.025, (b - a) * 0.35);
       var title = el.querySelector('.split');
       if (title) splitInto(title, entrance, spread);
+      el.setAttribute('inert', '');
+      el.setAttribute('aria-hidden', 'true');
       bands.push({
         el: el, a: a, b: b, ramp: ramp,
         first: i === 0, last: i === nodes.length - 1,
@@ -159,6 +177,8 @@
         if (live !== bd.live) {
           bd.live = live;
           bd.el.classList.toggle('live', live);
+          bd.el.toggleAttribute('inert', !live);
+          bd.el.setAttribute('aria-hidden', live ? 'false' : 'true');
         }
       }
       if (Math.abs(k - bd.k) > 0.008) {
@@ -326,13 +346,15 @@
 
   function onHeroScroll() {
     target = heroProgress();
+    if (target > 0.002 && target < 0.995) denseRequested = true;
+    resumeFrames();
     kick();
   }
 
   if ('IntersectionObserver' in window) {
     new IntersectionObserver(function (entries) {
       heroOnScreen = entries[0].isIntersecting;
-      if (heroOnScreen) kick();
+      if (heroOnScreen) { resumeFrames(); kick(); }
     }, { rootMargin: '10px' }).observe(heroSec);
   }
 
@@ -358,6 +380,7 @@
 
   function failVideo() {
     if (ring && ring.parentNode) ring.replaceWith(makeScrollChevron());
+    disableScrub();
     stage.classList.add('video-failed');
   }
 
@@ -379,10 +402,12 @@
     var order = frameOrder();
     var firstPass = Math.ceil(FRAME_COUNT / 16);
     var ptr = 0, active = 0, okCount = 0;
+    var failed = false;
 
     function done(idx, ok) {
       loadedCount++;
       active--;
+      if (failed) return;
       if (ok) {
         okCount++;
         if (ring) ring.style.setProperty('--ld', Math.round(126 * (1 - okCount / FRAME_COUNT)));
@@ -398,7 +423,9 @@
     }
 
     function pump() {
-      while (active < 6 && ptr < order.length) {
+      if (failed || !scrubOn || document.hidden || !heroOnScreen) return;
+      var limit = denseRequested ? order.length : firstPass;
+      while (active < 4 && ptr < limit) {
         (function (idx) {
           active++;
           var img = new Image();
@@ -410,8 +437,11 @@
       }
     }
 
+    resumeFrames = pump;
     pump();
-    setTimeout(function () { if (!heroReady) failVideo(); }, 20000);
+    setTimeout(function () {
+      if (!heroReady) { failed = true; failVideo(); }
+    }, 20000);
   }
 
   function initHeroOnce() {
@@ -459,6 +489,8 @@
 
   function enableScrub() {
     if (scrubOn) return;
+    if (!ctx || stage.classList.contains('video-failed')) return;
+    document.documentElement.classList.add('scrub-enabled');
     scrubOn = true;
     initHeroOnce();
     window.addEventListener('scroll', onHeroScroll, { passive: true });
@@ -474,6 +506,7 @@
   }
 
   function disableScrub() {
+    document.documentElement.classList.remove('scrub-enabled');
     if (!scrubOn) return;
     scrubOn = false;
     window.removeEventListener('scroll', onHeroScroll);
@@ -481,7 +514,7 @@
   }
 
   function applyHeroMode() {
-    var gated = MQLS.some(function (m) { return m.matches; });
+    var gated = motionReduced() || saveTraffic() || !ctx || MQLS.some(function (m) { return m.matches; });
     if (gated) disableScrub(); else enableScrub();
   }
   MQLS.forEach(function (m) {
@@ -639,7 +672,7 @@
 
   function sparksAllowed() {
     return sparkWraps.length > 0 &&
-      !reduceQuery.matches &&
+      !motionReduced() &&
       !matchMedia('(max-width: 1200px)').matches &&
       !document.hidden;
   }
@@ -884,62 +917,7 @@
   /* ----------------------------------------------------------
      8в. Мини-карта: наклон за мышкой и разворот по клику
      ---------------------------------------------------------- */
-  (function miniMap() {
-    var map = document.getElementById('minimap');
-    if (!map) return;
-    var card = map.querySelector('.minimap__card');
-    var toggle = map.querySelector('.minimap__toggle');
-    var link = map.querySelector('.minimap__link');
-    var hint = document.getElementById('minimap-hint');
-    var open = false;
-    var tiltRaf = null;
-    var wantRx = 0, wantRy = 0, showRx = 0, showRy = 0;
 
-    function canTilt() {
-      return !reduceQuery.matches && !matchMedia('(pointer: coarse)').matches;
-    }
-
-    function tiltTick() {
-      showRx += (wantRx - showRx) * 0.18;
-      showRy += (wantRy - showRy) * 0.18;
-      card.style.setProperty('--rx', showRx.toFixed(2) + 'deg');
-      card.style.setProperty('--ry', showRy.toFixed(2) + 'deg');
-      if (Math.abs(wantRx - showRx) > 0.02 || Math.abs(wantRy - showRy) > 0.02) {
-        tiltRaf = requestAnimationFrame(tiltTick);
-      } else {
-        tiltRaf = null;
-      }
-    }
-    function kickTilt() {
-      if (tiltRaf === null) tiltRaf = requestAnimationFrame(tiltTick);
-    }
-
-    map.addEventListener('mousemove', function (e) {
-      if (!canTilt()) return;
-      var r = card.getBoundingClientRect();
-      var dx = (e.clientX - (r.left + r.width / 2)) / (r.width / 2);
-      var dy = (e.clientY - (r.top + r.height / 2)) / (r.height / 2);
-      wantRy = clamp(dx, -1, 1) * 8;
-      wantRx = clamp(dy, -1, 1) * -8;
-      kickTilt();
-    });
-    map.addEventListener('mouseleave', function () {
-      wantRx = 0; wantRy = 0;
-      kickTilt();
-    });
-
-    function setOpen(next) {
-      open = next;
-      map.classList.toggle('open', open);
-      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-      toggle.querySelector('.sr-only').textContent = open ? 'Свернуть карту проезда' : 'Развернуть карту проезда';
-      if (link) link.setAttribute('tabindex', open ? '0' : '-1');
-      if (hint) hint.textContent = open ? 'Нажмите ещё раз, чтобы свернуть' : 'Нажмите на карту, чтобы развернуть';
-    }
-
-    toggle.addEventListener('click', function () { setOpen(!open); });
-    if (link) link.addEventListener('click', function (e) { e.stopPropagation(); });
-  })();
 
   /* ----------------------------------------------------------
      9. Меньше движения, в обе стороны
@@ -968,11 +946,13 @@
 
   if (reduceQuery.addEventListener) {
     reduceQuery.addEventListener('change', function (e) {
-      if (e.matches) pinToFinalStates(); else applyHeroMode();
+      syncMotionPreference();
+      if (motionReduced()) { disableScrub(); pinToFinalStates(); } else { unpinFinalStates(); applyHeroMode(); }
     });
   } else {
     reduceQuery.addListener(function (e) {
-      if (e.matches) pinToFinalStates(); else applyHeroMode();
+      syncMotionPreference();
+      if (motionReduced()) { disableScrub(); pinToFinalStates(); } else { unpinFinalStates(); applyHeroMode(); }
     });
   }
 
@@ -981,10 +961,27 @@
      ---------------------------------------------------------- */
   document.addEventListener('visibilitychange', function () {
     document.body.classList.toggle('paused', document.hidden);
+    if (!document.hidden) resumeFrames();
     updateSparks();
   });
 
-  if (reduceQuery.matches) {
+  var menu = document.querySelector('.mobile-menu');
+  if (menu) {
+    menu.querySelectorAll('a').forEach(function (link) {
+      link.addEventListener('click', function () {
+        menu.open = false;
+        var targetSection = document.getElementById(link.hash.slice(1));
+        if (targetSection) { targetSection.setAttribute('tabindex','-1'); targetSection.focus({preventScroll:true}); }
+      });
+    });
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && menu.open) { menu.open = false; menu.querySelector('summary').focus(); }
+    });
+    document.addEventListener('click', function (event) { if (!menu.contains(event.target)) menu.open = false; });
+  }
+  if (connection && connection.addEventListener) connection.addEventListener('change', applyHeroMode);
+  syncMotionPreference();
+  if (motionReduced()) {
     pinToFinalStates();
   } else {
     applyHeroMode();
