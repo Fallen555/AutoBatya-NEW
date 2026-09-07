@@ -614,14 +614,23 @@
   }
 
   /* ----------------------------------------------------------
-     8б. Сварка по краям страницы: вспышка и сноп искр
+     8б. Сварка по краям страницы
+
+     Сварка — это не фейерверк. Дуга держится на шве секунду с небольшим
+     и ползёт вдоль него, а раскалённые капли всё это время летят ВБОК:
+     веером вокруг горизонтали, с малым уклоном вниз. Вверх не уходит
+     почти ничего — фонтан вверх выдаёт бенгальский огонь, а не металл.
+     Капля, чиркнув по металлу, отскакивает и катится дальше вбок; по
+     дороге часть капель лопается на мелкие — это характерный треск.
      ---------------------------------------------------------- */
   var sparkWraps = [].slice.call(document.querySelectorAll('.sparks'));
   var sparkCtx = [];
   var sparkSize = [];
   var parts = [];
   var flashes = [];
-  var nextBurst = [0, 0];
+  var arcs = [null, null];     // дуга на каждой стороне, null — сейчас не варит
+  var nextPass = [0, 0];       // когда начнётся следующий проход по шву
+  var MAX_PARTS = 320;         // потолок, чтобы длинный проход не завалил кадр
   var sparksOn = false;
   var sparkRaf = null;
   var sparkLast = 0;
@@ -657,36 +666,63 @@
     window.addEventListener('resize', sizeSparks, { passive: true });
   }
 
-  // один разряд: короткая вспышка и сноп искр из точки
-  function burst(side) {
+  // Проход по шву: дуга загорается в точке и ползёт вниз вдоль стыка.
+  // Ставим её ближе к внешнему краю полосы — тогда каплям есть куда лететь.
+  function startPass(side, now) {
     var sz = sparkSize[side];
     if (!sz) return;
-    var x = sz.w * (0.28 + srand() * 0.5);
-    var y = sz.h * (0.12 + srand() * 0.62);
-    flashes.push({ side: side, x: x, y: y, life: 1, r: 34 + srand() * 30 });
+    var inward = side === 0 ? 1 : -1;
+    var x = side === 0 ? sz.w * (0.13 + srand() * 0.15) : sz.w * (0.72 + srand() * 0.15);
+    var y = sz.h * (0.16 + srand() * 0.56);
+    arcs[side] = {
+      x: x, y: y, inward: inward,
+      until: now + 800 + srand() * 1200,   // длина шва
+      next: 0,
+      drift: 12 + srand() * 26             // электрод идёт по стыку
+    };
+    nextPass[side] = arcs[side].until + 2400 + srand() * 4400;
+    flashes.push({ side: side, x: x, y: y, life: 1, r: 30 + srand() * 22 });
+  }
 
-    var n = 16 + Math.round(srand() * 16);
+  // выброс капель из дуги: веер вокруг горизонтали
+  function spit(side, arc) {
+    var n = 3 + Math.round(srand() * 5);
     for (var i = 0; i < n; i++) {
-      var ang = (-0.35 + srand() * 1.9) * Math.PI;   // веером, больше вниз и в стороны
-      var sp = 110 + srand() * 340;
+      if (parts.length >= MAX_PARTS) return;
+      // ±35 градусов от горизонта плюс небольшой уклон вниз
+      var a = (srand() - 0.5) * 1.22 + 0.13;
+      // большая часть летит вглубь полосы, меньшая — за край экрана
+      var dir = srand() < 0.76 ? arc.inward : -arc.inward;
+      var sp = 300 + srand() * 520;
       parts.push({
-        side: side, x: x, y: y, px: x, py: y,
-        vx: Math.cos(ang) * sp * (0.5 + srand() * 0.8),
-        vy: Math.abs(Math.sin(ang)) * sp * 0.55 - 60 - srand() * 90,
-        life: 1, decay: 0.32 + srand() * 0.38,
-        size: 0.9 + srand() * 1.5,
-        hot: srand() < 0.4
+        side: side, x: arc.x, y: arc.y, px: arc.x, py: arc.y,
+        vx: dir * Math.cos(a) * sp,
+        vy: Math.sin(a) * sp,
+        floor: arc.y + 4 + srand() * 12,                 // плоскость металла под дугой
+        bounce: srand() < 0.72 ? 2 : 0,
+        pop: srand() < 0.3 ? 0.34 + srand() * 0.26 : 0,  // на какой доле жизни лопнет
+        life: 1, decay: 1.5 + srand() * 1.5,
+        size: 0.8 + srand() * 1.1,
+        hot: srand() < 0.45
       });
     }
-    // редкие длинные искры, которые улетают дальше всех
-    if (srand() < 0.5) {
-      for (var j = 0; j < 3; j++) {
-        parts.push({
-          side: side, x: x, y: y, px: x, py: y,
-          vx: (srand() - 0.5) * 150, vy: -140 - srand() * 120,
-          life: 1, decay: 0.22 + srand() * 0.16, size: 1.4 + srand(), hot: true
-        });
-      }
+  }
+
+  // капля лопнула: мелкие осколки во все стороны, живут совсем недолго
+  function popInto(p) {
+    var n = 2 + Math.round(srand() * 2);
+    for (var i = 0; i < n; i++) {
+      if (parts.length >= MAX_PARTS) return;
+      var a = srand() * 6.2832;
+      var sp = 40 + srand() * 130;
+      parts.push({
+        side: p.side, x: p.x, y: p.y, px: p.x, py: p.y,
+        vx: p.vx * 0.32 + Math.cos(a) * sp,
+        vy: p.vy * 0.32 + Math.sin(a) * sp,
+        floor: p.floor, bounce: 0, pop: 0,
+        life: p.life * 0.75, decay: 3.4 + srand() * 2.2,
+        size: 0.55 + srand() * 0.6, hot: false
+      });
     }
   }
 
@@ -695,18 +731,49 @@
     sparkLast = now;
 
     for (var side = 0; side < sparkCtx.length; side++) {
-      if (now > nextBurst[side]) {
-        burst(side);
-        nextBurst[side] = now + 2000 + srand() * 4200;
-      }
       var sz = sparkSize[side];
       var g = sparkCtx[side];
       if (!g || !sz) continue;
       g.clearRect(0, 0, sz.w, sz.h);
       g.globalCompositeOperation = 'lighter';
+
+      var arc = arcs[side];
+      if (arc && now > arc.until) { arcs[side] = null; arc = null; }
+      if (!arc && now > nextPass[side]) { startPass(side, now); arc = arcs[side]; }
+      if (arc) {
+        arc.y += arc.drift * dt;                       // электрод ведут по шву
+        if (arc.y > sz.h * 0.88) arc.y = sz.h * 0.88;
+        if (now > arc.next) {                          // капли отрываются часто
+          spit(side, arc);
+          arc.next = now + 34 + srand() * 66;
+        }
+      }
     }
 
-    // вспышки
+    // Сама дуга. Она бело-голубая: это свет плазмы, а не пламя. Тёплый
+    // ореол вокруг — уже раскалённый металл, он и красит всё оранжевым.
+    for (var s2 = 0; s2 < arcs.length; s2++) {
+      var ac = arcs[s2];
+      var ga = sparkCtx[s2];
+      if (!ac || !ga) continue;
+      var fk = 0.55 + srand() * 0.45;                  // дуга дрожит, а не горит ровно
+      var rr2 = 30 + srand() * 12;
+      var gr2 = ga.createRadialGradient(ac.x, ac.y, 0, ac.x, ac.y, rr2 * 2.4);
+      gr2.addColorStop(0, 'rgba(228,242,255,' + (0.92 * fk).toFixed(3) + ')');
+      gr2.addColorStop(0.16, 'rgba(176,212,255,' + (0.44 * fk).toFixed(3) + ')');
+      gr2.addColorStop(0.42, 'rgba(255,186,104,' + (0.2 * fk).toFixed(3) + ')');
+      gr2.addColorStop(1, 'rgba(255,116,36,0)');
+      ga.fillStyle = gr2;
+      ga.beginPath();
+      ga.arc(ac.x, ac.y, rr2 * 2.4, 0, 6.2832);
+      ga.fill();
+      ga.fillStyle = 'rgba(244,250,255,' + (0.9 * fk).toFixed(3) + ')';
+      ga.beginPath();
+      ga.arc(ac.x, ac.y, 1.5 + srand() * 1.5, 0, 6.2832);
+      ga.fill();
+    }
+
+    // вспышка в момент розжига
     for (var f = flashes.length - 1; f >= 0; f--) {
       var fl = flashes[f];
       fl.life -= dt * 3.4;
@@ -731,11 +798,24 @@
       p.life -= dt * p.decay;
       if (p.life <= 0) { parts.splice(i, 1); continue; }
       p.px = p.x; p.py = p.y;
-      p.vy += 700 * dt;              // тяжесть
-      p.vx *= (1 - 1.1 * dt);        // сопротивление воздуха
-      p.vy *= (1 - 0.5 * dt);
+      // Тяжесть умеренная: капля мелкая и очень быстрая, за свою короткую
+      // жизнь она успевает лишь слегка провиснуть — траектория читается
+      // как штрих вбок, а не как навесная дуга.
+      p.vy += 520 * dt;
+      p.vx *= (1 - 2.1 * dt);        // воздух гасит в основном горизонталь
+      p.vy *= (1 - 1.1 * dt);
       p.x += p.vx * dt;
       p.y += p.vy * dt;
+
+      // Чиркнула по металлу — отскочила и покатилась дальше вбок.
+      if (p.bounce > 0 && p.vy > 0 && p.y >= p.floor && p.py < p.floor) {
+        p.y = p.floor;
+        p.vy = -p.vy * (0.2 + srand() * 0.22);
+        p.vx *= 0.78;
+        p.bounce--;
+      }
+      // Треск: капля лопается на несколько мелких.
+      if (p.pop && p.life < p.pop) { popInto(p); p.pop = 0; }
 
       var szp = sparkSize[p.side];
       var gp = sparkCtx[p.side];
@@ -752,7 +832,7 @@
       gp.lineWidth = p.size * (p.hot ? 1.5 : 1);
       gp.lineCap = 'round';
       gp.beginPath();
-      gp.moveTo(p.x - p.vx * 0.05, p.y - p.vy * 0.05);   // хвост по направлению полёта
+      gp.moveTo(p.x - p.vx * 0.028, p.y - p.vy * 0.028); // хвост по направлению полёта
       gp.lineTo(p.x, p.y);
       gp.stroke();
       if (p.hot) {
@@ -771,6 +851,7 @@
     if (sparkRaf !== null) { cancelAnimationFrame(sparkRaf); sparkRaf = null; }
     parts.length = 0;
     flashes.length = 0;
+    arcs[0] = arcs[1] = null;
     sparkLast = 0;
     for (var i = 0; i < sparkCtx.length; i++) {
       var sz = sparkSize[i];
@@ -791,8 +872,8 @@
       initSparks();
       sizeSparks();
       var t = performance.now();
-      nextBurst[0] = t + 250;
-      nextBurst[1] = t + 1400;
+      nextPass[0] = t + 300;
+      nextPass[1] = t + 1900;   // стороны варят вразнобой, а не хором
       sparkLast = 0;
       if (sparkRaf === null) sparkRaf = requestAnimationFrame(sparkTick);
     } else {
