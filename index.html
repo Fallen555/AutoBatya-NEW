@@ -569,11 +569,15 @@ button{font:inherit;color:inherit}
   border:1px solid var(--line);border-radius:2px;padding:7px 11px}
 
 /* плита открывается при прокрутке */
-.svc .plate{clip-path:inset(0 0 0 0);opacity:1;
-  transition:clip-path 1.05s var(--ease-soft),opacity .5s var(--ease)}
-.svc.in .plate{clip-path:inset(0 0 0 0);opacity:1}
-.svc.in:nth-of-type(2) .plate{transition-delay:.06s}
-.svc.in:nth-of-type(3) .plate{transition-delay:.12s}
+.svc .plate{clip-path:inset(0 0 0 0);opacity:1}
+/* Запуск при появлении секции; без JavaScript таблички остаются видимыми. */
+.svc.in .plate{animation:plateReveal 1.05s var(--ease-soft) both}
+.svc.in:nth-of-type(2) .plate{animation-delay:.06s}
+.svc.in:nth-of-type(3) .plate{animation-delay:.12s}
+@keyframes plateReveal{
+  from{clip-path:inset(0 100% 0 0);opacity:0}
+  to{clip-path:inset(0 0 0 0);opacity:1}
+}
 
 /* ============================================================
    8б. Прейскурант
@@ -1527,7 +1531,6 @@ html.effects-off{scroll-behavior:auto}
 <p class="visit-help">Не можете найти въезд?<br>Позвоните — подскажем.<br><a class="visit-phone" href="tel:+79040172588">+7 904 017-25-88</a></p></div>
 <div class="visit-map-area"><iframe title="АвтоБатя на Яндекс Картах, Тверь, Вагжанова 11к2" src="https://yandex.ru/map-widget/v1/?ll=35.934884%2C56.853115&amp;z=17&amp;pt=35.934884%2C56.853115%2Cpm2rdm" loading="lazy" allowfullscreen></iframe><div class="visit-map-foot"><span>Тверь · улица Вагжанова, 11к2</span><a href="https://yandex.ru/maps/org/avtobatya/18764866231/" target="_blank" rel="noopener noreferrer">Развернуть карту ↗</a></div></div>
 </section>
-      <p class="guarantee-note">Перед визитом позвоните для записи. Условия гарантии предоставляются на месте в автосервисе.</p>
     </div>
   </section>
 </main>
