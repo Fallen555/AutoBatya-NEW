@@ -569,15 +569,11 @@ button{font:inherit;color:inherit}
   border:1px solid var(--line);border-radius:2px;padding:7px 11px}
 
 /* плита открывается при прокрутке */
-.svc .plate{clip-path:inset(0 0 0 0);opacity:1}
-/* Запуск при появлении секции; без JavaScript таблички остаются видимыми. */
-.svc.in .plate{animation:plateReveal 1.05s var(--ease-soft) both}
-.svc.in:nth-of-type(2) .plate{animation-delay:.06s}
-.svc.in:nth-of-type(3) .plate{animation-delay:.12s}
-@keyframes plateReveal{
-  from{clip-path:inset(0 100% 0 0);opacity:0}
-  to{clip-path:inset(0 0 0 0);opacity:1}
-}
+.svc .plate{clip-path:inset(0 100% 0 0);opacity:1;
+  transition:clip-path 1.05s var(--ease-soft)}
+.svc.in .plate{clip-path:inset(0 0 0 0)}
+.svc.in:nth-of-type(2) .plate{transition-delay:.06s}
+.svc.in:nth-of-type(3) .plate{transition-delay:.12s}
 
 /* ============================================================
    8б. Прейскурант
@@ -1021,6 +1017,7 @@ html{scroll-padding-top:88px}
 .effects-off *,.effects-off *::before,.effects-off *::after{animation:none!important;transition:none!important}
 html.effects-off{scroll-behavior:auto}
 .effects-off .sparks{display:none}
+.effects-off .svc .plate{clip-path:inset(0 0 0 0)}
 @media(max-width:1000px){
  .nav{padding:12px;gap:8px}
  .nav__links{display:none}
@@ -1064,6 +1061,7 @@ html.effects-off{scroll-behavior:auto}
 @media print{.visit-layout{display:block;border-color:#888;background:white;color:black}.visit-map-area{display:none}.visit-details{padding:18px}.visit-details p,.visit-details a,.visit-hours span,.guarantee-note{color:black}.visit-route{background:transparent;border:1px solid #888}}
 
 </style>
+<noscript><style>.svc .plate{clip-path:inset(0 0 0 0);transition:none}</style></noscript>
 </head>
 <body>
 <a class="skip" href="#main">Перейти к содержимому</a>
