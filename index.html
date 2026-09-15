@@ -2,12 +2,13 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; frame-src https://yandex.ru https://yandex.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://mc.yandex.ru; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://mc.yandex.ru https://mc.yandex.com; font-src 'self'; connect-src https://mc.yandex.ru https://mc.yandex.com; frame-src https://yandex.ru https://yandex.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>АвтоБатя, автосервис в Твери на Вагжанова 11к2</title>
 <meta name="description" content="Комплексная диагностика, ремонт узлов и агрегатов, подбор автозапчастей. Смету согласуем до начала работ, снятые детали покажем. Тверь, улица Вагжанова 11к2.">
 <meta name="theme-color" content="#0D0F12">
+<link rel="stylesheet" href="assets/metrika.css?v=20260915">
 <meta property="og:type" content="website">
 <meta property="og:title" content="АвтоБатя, автосервис в Твери">
 <meta property="og:description" content="Сначала причина, потом ремонт. Диагностика, ремонт узлов и агрегатов, подбор запчастей. Тверь, Вагжанова 11к2.">
@@ -1543,7 +1544,8 @@ html.effects-off{scroll-behavior:auto}
       <!-- Документы обязаны быть доступны с любой страницы: этого требует
            часть 2 статьи 18.1 закона о персональных данных. -->
       <p class="foot__docs"><a href="privacy.html">Обработка персональных данных</a>
-        <span aria-hidden="true">·</span> <a href="consent.html">Согласие</a></p>
+        <span aria-hidden="true">·</span> <a href="consent.html">Согласие</a>
+        <span aria-hidden="true">·</span> <button type="button" class="analytics-settings" data-analytics-settings>Настройки аналитики</button></p>
     </div>
   </div>
 </footer>
@@ -1561,5 +1563,6 @@ html.effects-off{scroll-behavior:auto}
 </a>
 
 <script src="assets/site.js?v=20260907-audit1" defer></script>
+<script src="assets/metrika.js?v=20260915" defer></script>
 </body>
 </html>
