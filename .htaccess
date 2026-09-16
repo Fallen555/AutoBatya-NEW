@@ -1,5 +1,11 @@
 DirectoryIndex index.html
 
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTP_HOST} ^www\.autobatya-tver\.ru$ [NC]
+  RewriteRule ^ https://autobatya-tver.ru%{REQUEST_URI} [R=301,L]
+</IfModule>
+
 <IfModule mod_headers.c>
   Header always set Content-Security-Policy "default-src 'self'; script-src 'self' https://mc.yandex.ru; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://mc.yandex.ru https://mc.yandex.com; font-src 'self'; connect-src https://mc.yandex.ru https://mc.yandex.com; frame-src https://yandex.ru https://yandex.com; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
